@@ -486,6 +486,7 @@ deletes your account.
 | | |
 | --- | --- |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | the design, the full GraphQL reference, the data model, invariants and constraints |
+| [CLAUDE.md](./CLAUDE.md) | working conventions — the commands, the rules that fail silently, and what not to "fix" |
 | [backend/README.md](./backend/README.md) | running the API, both database modes, reseeding |
 | [frontend/README.md](./frontend/README.md) | running the interface, and every test command in detail |
 | [docs/accessibility.md](./docs/accessibility.md) | the UX and screen-reader work, and the four audit tools used to check it |
