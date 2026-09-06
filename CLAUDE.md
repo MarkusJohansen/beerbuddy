@@ -78,7 +78,7 @@ preferences.
 6. **Do not add dependencies.** Minimal dependency count is a *graded* requirement
    and the reasoning is written down in
    [`docs/sustainability.md`](docs/sustainability.md), with the current figures. The
-   count is 39 direct, down from 55. If something genuinely needs a new package, say
+   count is 41 direct, down from 55. If something genuinely needs a new package, say
    what it replaces and why the argument in that document no longer holds.
 
 7. **Accessibility failures are test failures.** `jest-axe` assertions run inside the
@@ -120,7 +120,7 @@ treat the fix as a documentation change too — README and ARCHITECTURE both des
 them by name, so a silent fix leaves the docs lying.
 
 That applies to: the absent authentication, the absent rate limiting, the cache
-purging wholesale on any write, the single 987 kB bundle chunk, backend hot reload
+purging wholesale on any write, the single 1,019 kB bundle chunk, backend hot reload
 not working in-container on macOS, the ten React Compiler lint rules switched off,
 the five styleless beers reachable only through "Other", and `unreact` being stored
 as a row rather than deleting one.

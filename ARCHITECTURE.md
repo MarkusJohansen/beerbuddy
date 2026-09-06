@@ -468,7 +468,7 @@ Real limitations, stated rather than hidden.
   pages. Fine for 2,410 rows.
 - **The cache purges wholesale on any write.** A single vote empties it. Acceptable at
   this size; measure before adding tags.
-- **The bundle is one 987 kB chunk** (312 kB gzipped). No code splitting.
+- **The bundle is one 1,019 kB chunk** (320 kB gzipped). No code splitting.
 - **Backend hot reload does not work in-container on macOS.** Section 11.
 - **Five beers have no style** and are only reachable through the "Other" filter.
 - **`vote_type = 'unreact'`** is stored as a row rather than the row being deleted, so

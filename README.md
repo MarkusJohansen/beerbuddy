@@ -203,7 +203,7 @@ No ORM: the catalogue query needs a window function and a correlated subquery, b
 awkward through one. No GraphQL: see
 [ARCHITECTURE § Decisions](ARCHITECTURE.md#13-decisions).
 
-**39 direct dependencies**, down from 55 — and 12 of them are runtime, down from 24.
+**41 direct dependencies**, down from 55 — and 14 of them are runtime, down from 24.
 Dependency count is a graded requirement; see
 [`docs/sustainability.md`](docs/sustainability.md).
 
@@ -310,7 +310,7 @@ Documented on purpose. Fix one only when asked, and update this section when you
 - **No rate limiting.** Any client can write as fast as it likes.
 - **The cache purges wholesale on any write.** One vote empties it. Fine at 2,410
   rows; measure before adding tag-based invalidation.
-- **The bundle is a single 987 kB chunk** (312 kB gzipped). No code splitting.
+- **The bundle is a single 1,019 kB chunk** (320 kB gzipped). No code splitting.
 - **Backend hot reload does not work in-container on macOS.** See above.
 - **Ten React Compiler lint rules are switched off** because they flag pre-existing
   patterns in the data-fetching layer. See

@@ -79,8 +79,8 @@ The current count, direct dependencies only:
 | | Runtime | Dev | Total |
 | -------- | ------: | --: | ----: |
 | Backend  | 3 | 6 | 9 |
-| Frontend | 9 | 21 | 30 |
-| **Total** | **12** | **27** | **39** |
+| Frontend | 11 | 21 | 32 |
+| **Total** | **14** | **27** | **41** |
 
 That is down from **55** (24 runtime, 31 dev). The backend fell from 25 to 9.
 
@@ -106,6 +106,13 @@ because `uuid` now ships its own types and the second because nothing used it.
 The frontend's type-safety across the API costs no runtime dependency at all: the
 types are imported from the backend's source and erased at build time, so nothing
 from the backend reaches the bundle and there is no generated client to maintain.
+
+`@emotion/react` and `@emotion/styled` are the two packages added since. They
+replace nothing. MUI declares them as *optional* peer dependencies, so an install
+omits them, but `@mui/styled-engine` imports them unconditionally — the ABV and IBU
+sliders MUI is carried for cannot render without them. Leaving them undeclared saved
+no package; it only meant a clean install produced a frontend that failed on import,
+which is how CI found them.
 
 If something genuinely needs a new package, say what it replaces and why the
 argument above no longer holds.
