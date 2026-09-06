@@ -147,6 +147,40 @@ as a row rather than deleting one.
 - **JSDoc on exported functions and components.** The existing code is consistent
   about this; keep it.
 
+## Exploring the code
+
+**Reach for the `codebase-memory` MCP before spawning a search agent.** The graph
+answers structural questions — what exists, who calls what, how a flow reaches the
+database — for a fraction of the tokens an agent burns reading files.
+
+| Tool               | Use it for                                                  |
+| ------------------ | ----------------------------------------------------------- |
+| `search_graph`     | find a function, route or component by name or pattern       |
+| `trace_path`       | call chains and data flow, e.g. a route down to its SQL      |
+| `get_code_snippet` | the exact source of one symbol, by qualified name            |
+| `get_architecture` | structure and module layout                                  |
+| `search_code`      | graph-augmented text search                                  |
+| `query_graph`      | Cypher, for anything the above cannot express                |
+
+If the repository is not indexed yet, run `index_repository` once and then query —
+still cheaper than an agent over a codebase this size. `detect_changes` after a large
+edit keeps the graph honest.
+
+Questions worth asking it here rather than grepping:
+
+- **What reaches the database?** Everything funnels through `backend/src/queries.ts`;
+  `trace_path` from a route handler shows which query a change affects.
+- **What breaks if a response field changes?** The frontend types are inferred from
+  the backend, so a rename ripples. The graph finds the call sites faster than the
+  compiler error does.
+- **Who calls `protectRoute`, `useWindowDimensions`, or the API client?** These are
+  the three things wired into many components.
+
+Use `Grep`, `Glob` and `Read` directly for single-file lookups, for configs and
+Markdown, and always to read a file before editing it — no agent needed for those
+either. Spawn a search agent only when the question is genuinely text-based or the
+graph cannot answer it, and say in one line why the MCP did not fit.
+
 ## Documentation
 
 The docs are dense, cross-linked and full of specific numbers, and every number is
