@@ -1,0 +1,99 @@
+# CI for the GitHub remote this repository actually lives on.
+#
+# It replaces .gitlab-ci.yml, which targeted the NTNU GitLab instance the project
+# was originally hosted on and therefore never ran here. The job list is the same
+# set of commands the Makefile runs locally, so a green local check means a green
+# CI run.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      - name: Install
+        working-directory: frontend
+        run: bun install --frozen-lockfile
+
+      # The typed client imports the backend's route types, so tsc needs the
+      # backend's dependencies resolvable too.
+      - name: Install backend types
+        working-directory: backend
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        working-directory: frontend
+        run: bun run lint
+
+      - name: Format
+        working-directory: frontend
+        run: bun run prettier:check
+
+      - name: Unit tests
+        working-directory: frontend
+        run: bun run test:unit
+
+      - name: Build
+        working-directory: frontend
+        env:
+          VITE_APP_BACKEND_URL: http://localhost:3000/api
+        run: bun run build
+
+  backend:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: beerbuddy
+          POSTGRES_PASSWORD: beerbuddy
+          POSTGRES_DB: beers
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U beerbuddy"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 20
+
+    env:
+      DATABASE_URL: postgres://beerbuddy:beerbuddy@localhost:5432/beers
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      - name: Install
+        working-directory: backend
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        working-directory: backend
+        run: bun run lint
+
+      - name: Format
+        working-directory: backend
+        run: bun run prettier:check
+
+      - name: Type check
+        working-directory: backend
+        run: bun run typecheck
+
+      # tests/setup.ts builds a disposable beers_test database from db/*.sql before
+      # any test file is imported.
+      - name: Tests
+        working-directory: backend
+        run: bun test
