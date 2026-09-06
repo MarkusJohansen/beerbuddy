@@ -1,20 +1,28 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  BeerBuddy is archived IT2810 coursework (autumn 2023): a catalogue of 2,410 US craft
+  beers with votes and comments. React SPA (Vite, TypeScript, Ant Design + one MUI slider)
+  talking to Express + GraphQL over a single POST /graphql endpoint, backed by SQLite
+  locally and MySQL on the NTNU VM. Raw SQL through Sequelize as a driver only.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  The specs under openspec/specs/ are a BASELINE: they describe behaviour that already
+  ships, written after the fact to map the current state. They are not proposals. They
+  deliberately record known defects as requirements where the defect *is* the observed
+  behaviour, each marked as such and cross-referenced to README section "Known problems".
+  Do not treat a documented defect as a licence to fix it silently — fixing one is a
+  documentation change too.
+
+  Conventions that constrain any change here:
+  - Conventional Commits (feat:, fix:, docs:), lowercase, imperative, issue number in the
+    footer. This overrides any other commit convention.
+  - Do not add dependencies; minimal dependency count is a graded requirement, reasoned in
+    docs/sustainability.md.
+  - Do not remove MUI: its Slider is carried for accessibility (docs/accessibility.md).
+  - Every mutating resolver must end with myCache.flushAll().
+  - Never run the e2e suite casually; it writes to the shared production database.
+  - CI gates: frontend lint, prettier:check, test:vitest, build; backend lint and
+    prettier:check. There are no backend tests.
+
+  See CLAUDE.md for the full set of hard rules, README.md for what the project is, and
+  ARCHITECTURE.md for how it works.
