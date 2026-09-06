@@ -1,6 +1,6 @@
 # Requirements
 
-## Funtional Requirements
+## Functional Requirements
 
 > Search option, e.g., with a dialog/form/search field for inputting search terms
 
@@ -54,7 +54,7 @@ We have a custom GraphQL backend with a SQLite or MySQL database depending on th
 
 > Use of good and relevant components and libraries (free choice and we encourage as much reuse of third-party solutions as possible).
 
-Yse we are using Antd and Material UI for styling. Seen in the [Readme](./README.md#Libraries,-frameworks-and-tech-stack).
+Yes, we are using Antd and Material UI for styling. Seen in the [Readme](../README.md#tech-stack-and-why).
 
 ## Testing, development and Quality control Requirements
 
@@ -64,15 +64,15 @@ Yes we have also implemented linting pipeline with prettier.
 
 > Completed testing of components (we use Vitest)
 
-Yes we have implemented testing of components with Vitest. Where you can see how to test the components [here](./README.md#Run-tests).
+Yes we have implemented testing of components with Vitest. Where you can see how to test the components [here](../frontend/README.md#testing).
 
 > Some form of automated end-to-end testing (in practice, testing a longer sequence of interactions), testing of the API.
 
-End to end testing are documented [here](./frontend/README.md#Run-only-end-to-end-tests).
+End to end testing are documented [here](../frontend/README.md#end-to-end-tests).
 
 > The project is documented with a README.md in the git repository. The documentation should discuss, explain, and refer to all the key choices and solutions made by the group (including choice of components and API).
 
-Yes we have a [Readme](./README.md) that explains the key choices and solutions made by the group.
+Yes we have a [Readme](../README.md) that explains the key choices and solutions made by the group.
 
 > The code should be readable and well-structured and commented so that it is easy to understand. The use of comments should be adapted for external inspection of the code.
 
@@ -84,4 +84,4 @@ We have submitted a file in BB that summarizes each individual's contribution to
 
 > Reproducibility: in practice, this means that the project should be documented and easy to install/run for others (e.g., the course instructor).
 
-Yes we have a [Readme](./README.md#run-the-project) that explains how to install and run the project.
+Yes we have a [Readme](../README.md#quickstart) that explains how to install and run the project.
