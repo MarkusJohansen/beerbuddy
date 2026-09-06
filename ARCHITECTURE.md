@@ -1,674 +1,505 @@
 # Architecture
 
-How BeerBuddy is put together, why it is put together that way, and which parts of it are
-load-bearing. [`README.md`](./README.md) is the tour; this is the reference.
+How BeerBuddy works, and why it is built this way.
 
-Line references are to the state of the repository at the time of writing. Where a design
-decision has a reason, the reason is given. Where it does not, that is said too.
+[README.md](README.md) is what the project is and how to run it. This file is the
+internals. [CLAUDE.md](CLAUDE.md) is what will bite you.
 
----
+> **This backend has no authentication.** The caller's identity is a UUID the
+> browser generated and sends in a header; anyone can send any value. Do not put
+> this on an untrusted network, and do not present it as production-ready.
 
 ## Contents
 
-| | |
-| --- | --- |
-| [1. The shape of the system](#1-the-shape-of-the-system) | three processes, one endpoint |
-| [2. The GraphQL surface](#2-the-graphql-surface) | every field, argument and return shape |
-| [3. The request path](#3-the-request-path) | from `fetch` to SQL and back |
-| [4. Caching](#4-caching) | what is cached, keyed on what, invalidated when |
-| [5. The data model](#5-the-data-model) | five tables, and the joins that matter |
-| [6. The query that does the work](#6-the-query-that-does-the-work) | `beers` explained line by line |
-| [7. Identity](#7-identity) | what "logged in" means here, and what it does not |
-| [8. Frontend structure](#8-frontend-structure) | routing, state, data fetching, responsiveness |
-| [9. Accessibility as architecture](#9-accessibility-as-architecture) | the parts that are structural, not cosmetic |
-| [10. Testing](#10-testing) | the two suites and what each can prove |
-| [11. Build and deployment](#11-build-and-deployment) | CI, containers, the VM |
-| [12. Invariants](#12-invariants) | break one of these and the failure is silent |
-| [13. Known constraints](#13-known-constraints) | real, and not about to be fixed |
-| [14. What is deliberately absent](#14-what-is-deliberately-absent) | and why |
-| [15. Where a change attaches](#15-where-a-change-attaches) | if this were picked up again |
+1. [The shape of the system](#1-the-shape-of-the-system)
+2. [The HTTP surface](#2-the-http-surface)
+3. [The request path](#3-the-request-path)
+4. [Caching](#4-caching)
+5. [The data model](#5-the-data-model)
+6. [The query that does the work](#6-the-query-that-does-the-work)
+7. [Identity](#7-identity)
+8. [Frontend structure](#8-frontend-structure)
+9. [Accessibility as architecture](#9-accessibility-as-architecture)
+10. [Testing](#10-testing)
+11. [Build and deployment](#11-build-and-deployment)
+12. [Invariants](#12-invariants)
+13. [Decisions](#13-decisions)
+14. [Known constraints](#14-known-constraints)
+15. [What is deliberately absent](#15-what-is-deliberately-absent)
+16. [Where a change attaches](#16-where-a-change-attaches)
 
 ---
 
 ## 1. The shape of the system
 
-Three processes, and one HTTP endpoint between them.
+Three processes in development, two in the production image.
 
 ```
-┌──────────────────────────┐
-│ browser                  │   React 18 + Vite, served on :5173 in dev
-│  React SPA               │   4 routes, one shared context, no client cache
-└───────────┬──────────────┘
-            │  POST http://<host>:3000/graphql
-            │  Content-Type: application/json
-            │  { "query": "{ beers(size: 10 …) }" }     ← the query is a template
-            ▼                                             string, built per call site
-┌──────────────────────────┐
-│ node                     │   express :3000
-│  cacheMiddleware         │   ① md5(url+body) → NodeCache, 24 h
-│  express-graphql         │   ② parse, validate args, dispatch on rootValue
-│  resolvers               │   ③ build one SQL string
-│  sequelize               │   ④ .query() — raw SQL, no models, no ORM mapping
-└───────────┬──────────────┘
-            │
-            ▼
-┌──────────────────────────┐
-│ database                 │   SQLite file (dev) or MySQL/MariaDB (prod, compose)
-│  5 tables                │   selected by $DATABASE at process start
-└──────────────────────────┘
+┌──────────────┐        HTTP/JSON         ┌──────────────┐      SQL      ┌────────────┐
+│  React SPA   │ ───────────────────────▶ │  Hono API    │ ────────────▶ │ PostgreSQL │
+│  Vite :5173  │ ◀─────────────────────── │  Bun :3000   │ ◀──────────── │  18 :5433  │
+└──────────────┘   X-User-Id header       └──────────────┘   Bun.sql     └────────────┘
 ```
 
-**Sequelize is used only as a driver.** No models are defined, no associations, no
-migrations, no `sync()`. Every call is `sequelize.query(<string>)` and every result is
-cast to a hand-written row type. The library is there because it abstracts two dialects
-behind one connection object, and for nothing else. That is a defensible use of it — and
-it does mean the schema in `build/tables.sql` and the queries in `resolvers.ts` have no
-mechanical link, so a column rename breaks at runtime rather than at build time.
+All three run under podman, started with `make up`. Nothing needs installing on the
+host except podman itself — not Bun, not Node, not PostgreSQL.
 
-**There is no application build for the backend.** `npm run dev` runs `tsx` over the
-TypeScript directly. `npm run build` exists and emits to `dist/`, but nothing in the
-repository consumes that output — not the Dockerfile, not CI, not compose.
+In the production image the web tier collapses: the backend serves the built bundle
+through `hono/serve-static`, so a deployed BeerBuddy is the app container plus the
+database. That is what gives the SPA a single base path in every environment.
 
-### Why SQLite and MySQL both
+**Runtime is Bun.** Bun executes TypeScript directly, so there is no build step for
+the backend, no transpiler in the dependency list, and no `dist/` that nothing
+consumes. Bun also reads `.env` natively, which is why `dotenv` is gone.
 
-The original design was Postgres in a container. The group's virtual machine would not run
-Docker, so that design died. SQLite replaced it because it needs no server process, which
-makes cloning-and-running a one-step operation for a marker — but SQLite was the wrong
-answer for the graded deployment, where the requirement was to demonstrate handling a
-large result set. Hence both: SQLite as the zero-setup default, MySQL for the VM, chosen
-at process start by one ternary in `db.ts`.
+### One database, one dialect
 
-The cost of that choice is a schema written twice. `build/tables.sql` is MySQL syntax with
-the SQLite variants commented out beside them (`AUTO_INCREMENT` vs
-`AUTOINCREMENT`, the leading `CREATE DATABASE` block). Switching dialects means editing
-comments in a `.sql` file, which nothing verifies.
+PostgreSQL is the only engine, in every environment. The catalogue query needs a
+window function and a correlated subquery; the vote write needs `ON CONFLICT`; the
+style filter needs an array parameter. All three are used, and `db/01-schema.sql`
+is applied unmodified everywhere.
 
----
+## 2. The HTTP surface
 
-## 2. The GraphQL surface
+Eleven routes, resource-oriented. Reads are `GET`; state changes are `POST`,
+`PATCH`, `PUT` or `DELETE`.
 
-`schema.ts` declares three schemas which `server.ts` merges into one. All nine fields sit
-on `Query`. `scalar Any` is declared but never given a resolver — it is an opaque
-passthrough, so the response is whatever the resolver returned, unvalidated.
+| Method   | Path                      | Purpose                                   |
+| -------- | ------------------------- | ----------------------------------------- |
+| `GET`    | `/api/beers`              | filtered, sorted, paginated catalogue     |
+| `GET`    | `/api/beers/:id`          | one beer with aggregates                  |
+| `GET`    | `/api/beers/:id/comments` | paginated comments, newest first          |
+| `GET`    | `/api/styles`             | distinct styles present in the catalogue  |
+| `GET`    | `/api/session`            | the user the caller's id belongs to       |
+| `POST`   | `/api/session`            | resolve or create a user for a username   |
+| `PATCH`  | `/api/users/:id`          | rename a user                             |
+| `DELETE` | `/api/users/:id`          | delete a user, cascading votes + comments |
+| `PUT`    | `/api/beers/:id/reaction` | set this user's vote (idempotent)         |
+| `POST`   | `/api/beers/:id/comments` | add a comment                             |
+| `DELETE` | `/api/comments/:id`       | delete a comment you wrote                |
 
-### Reads
+### Types cross the wire without codegen
 
-| Field | Arguments | Returns |
-| --- | --- | --- |
-| `beers` | `size: Int!`, `start: Int`, `userId: String!`, `sort: String`, `search: String`, `minAbv: Int`, `maxAbv: Int`, `minIbu: Int`, `maxIbu: Int`, `styles: Any` | Array of `{ beer_id, beer_name, brewery_name, vote_sum, reaction, beer_count }` |
-| `beer` | `id: Int!`, `userId: String!` | **A one-element array** of `{ abv, ibu, name, style, ounces, id, brewery_name, rating, vote_count, comment_count, user_vote }` |
-| `comments` | `id: Int!` (the *beer* id), `size: Int!`, `start: Int` | Array of `{ comment_text, created_at, id, user_id, username }`, newest first |
+`backend/src/app.ts` exports `AppType` — the type of the chained route
+declarations. `frontend/src/api/client.ts` imports it and builds a `hono/client`
+caller from it:
 
-`beer` returning an array rather than an object is why every caller writes
-`data.data.beer[0]`. It is a leaked implementation detail — the resolver returns the raw
-rowset — and it is now load-bearing in three call sites.
+```ts
+import type { AppType } from "../../../backend/src/app.ts";
+const client = hc<AppType>(import.meta.env.VITE_APP_BACKEND_URL, { ... });
+```
 
-### Writes (declared as queries)
+The import is type-only and erased at build time, so nothing from the backend
+reaches the bundle. What it buys is that request shapes and response bodies are
+checked by `tsc` at both ends. Rename a column in `queries.ts` and the frontend
+build fails, naming the component that read the old field.
 
-| Field | Arguments | Returns | Notes |
-| --- | --- | --- | --- |
-| `loginOrSignUp` | `username: String!`, `uuid: String!` | `{ id, isNewUser: "yes" \| "no" }` | The only identity call the app makes. Idempotent on username. |
-| `login` | `username: String!` | Array of `{ id }` | Used by `protectRoute` as a consistency check. Read-only despite the name. |
-| `signUp` | `username: String!` | `id` | Superseded by `loginOrSignUp`; the frontend never calls it. Note the schema declares only `username`, while the resolver destructures `{ username, uuid }` — so `uuid` arrives `undefined` and the insert writes a null id. |
-| `updateUser` | `userId: String!`, `username: String!` | `"You updated your user!"` | No frontend caller. |
-| `deleteUser` | `userId: String!` | `"You deleted your user!"` | No frontend caller — but the **e2e suite** uses it to clean up. Cascades to votes and comments. |
-| `react` | `userId: String!`, `beerId: Int!`, `action: String!` | `"You reacted!"` | `action` ∈ `upvote \| downvote \| unreact`, validated in the resolver. Throws if you repeat your current reaction. |
-| `comment` | `userId: String!`, `beerId: Int!`, `comment: String!` | `"You commented!"` | Length and content validated **client-side only**. |
-| `deleteComment` | `userId: String!`, `commentId: Int!` | `"You deleted your comment!"` | Ownership enforced in both the `SELECT` guard and the `DELETE`'s `WHERE`. |
+There is **no code generation step**, no committed generated client, and no API
+client library on the wire. `frontend/src/types/types.ts` derives its types from the
+client's inferred returns rather than restating them:
 
-Every write returns a human-readable string, and errors surface as GraphQL errors from a
-thrown `Error`. There is no machine-readable status; the frontend distinguishes success
-from failure by whether `response.ok` held, which means a GraphQL-level error inside a
-200 response reads as success at several call sites.
+```ts
+export type Beer = Awaited<ReturnType<typeof fetchBeer>>;
+```
 
-### There is no query document anywhere
+Because the frontend type-checks against the backend's source, building the frontend
+needs `backend/src` and the backend's `node_modules` present. The repository-root
+`Dockerfile` and the `Makefile` both mount the whole repo for that reason; mounting
+only `frontend/` collapses every inferred type to `unknown`.
 
-Queries are built as template literals at the point of use — in
-`useFetchMoreBeers.tsx`, `useFetchBeer.tsx`, `protectRoute.tsx`, `Voter.tsx`,
-`CommentBar.tsx`, `CommentItem.tsx`, `LogIn.tsx` and `Beer.tsx`. No fragments, no
-variables, no generated types, no shared client module. Values are interpolated straight
-into the query string, so a username containing a `"` produces a syntactically invalid
-GraphQL document, and a beer id is spliced in unquoted.
+Route declarations are **chained** in `app.ts`. Breaking the chain into separate
+`app.get(...)` statements silently drops routes from `AppType`, and the frontend
+stops type-checking them.
 
-This is the single largest structural difference from a conventional GraphQL frontend, and
-it is the reason a schema change has to be found by grepping.
+### Errors
 
----
+Failure is signalled by status code, never by a `200` carrying an error string.
+Every failing response has one shape:
+
+```json
+{ "error": { "message": "beer not found", "code": "not_found" } }
+```
+
+`400` validation, `403` ownership, `404` missing, `409` duplicate username, `500`
+anything unexpected. A `500` body is always the generic message — driver text, SQL
+and stack traces are logged, never returned. A test renames a table mid-run to force
+a real driver error and asserts none of it leaks.
 
 ## 3. The request path
 
-Follow one catalogue load end to end.
+```
+request
+  → cors               (origin allowlist from CORS_ORIGINS; no wildcard)
+  → invalidateOnWrite  (mounted on the router; drops the cache after a write)
+  → identity           (X-User-Id header → c.get("userId"))
+  → zod validator      (path params, query, body — rejects before the handler runs)
+  → cacheGet           (GET only; serves a hit, stores a 200)
+  → handler            (calls src/queries.ts)
+  → Bun.sql            (bound parameters)
+```
 
-**1 — The component asks.** `App.tsx` mounts and calls `useFetchMoreBeers()`, which reads
-the five filter values out of `FilterContext` and the user id out of `localStorage`.
-
-**2 — The query is assembled.** `fetchMore(reset?, noFilters?)` builds the string. The two
-flags matter:
-
-- `reset: true` → `start: 0` and the response *replaces* the list, rather than appending.
-  Also persists the current filters to `localStorage`, and scrolls the list container back
-  to the top.
-- `noFilters: true` → sends the defaults regardless of context state, and writes the
-  defaults to `localStorage`. This is what *Reset Filters* uses: it clears the context and
-  re-queries in the same action, because clearing state alone would leave the old results
-  on screen until something else triggered a fetch.
-
-Page size is fixed at 10, and `start` is `beers.length` — offset pagination driven by how
-many rows the client already holds.
-
-**3 — `cacheMiddleware` intercepts.** See [§4](#4-caching).
-
-**4 — `express-graphql` dispatches.** The merged schema validates that argument names and
-scalar types match, then calls the matching key on `rootValue`. Because `rootValue` is a
-flat spread of all three resolver objects, **field names share one namespace across the
-three schemas** — two resolvers with the same field name would silently shadow.
-
-**5 — The resolver builds SQL.** One string, interpolated, no bind parameters. Dissected
-in [§6](#6-the-query-that-does-the-work).
-
-**6 — `sqlQuery()` executes it.** `resolvers.ts` wraps every call in one helper that takes
-`query[0]` (Sequelize returns `[rows, metadata]`) and, on failure, **returns the string
-`"Error in query"` instead of throwing.** Callers that check for it convert it to a thrown
-`Error`; callers that do not — `comments`, `beer`, `beers`, `login` — return that string
-to the client, where it arrives as a JSON string body where an array was expected. The
-frontend then calls `.map` on it. That is the failure mode to expect when a query is
-malformed.
-
-**7 — The response is cached on the way out and returned.**
-
-**8 — The component renders.** `setBeers(reset ? data.data.beers : [...beers, ...])`.
-There is no loading state on the list and no error state; a failed fetch leaves the
-previous rows on screen.
-
----
+Validation runs before the handler and before the cache, so an invalid request never
+reaches a query and never occupies a cache slot. The validated value *is* the
+handler's input type, so a handler cannot read a field it did not validate.
 
 ## 4. Caching
 
-`backend/caching.ts`, 45 lines, and the most consequential 45 lines in the backend.
+`backend/src/cache.ts` is an in-memory `Map` with a TTL, and two middlewares.
 
-```
-key = md5( req.originalUrl + JSON.stringify(req.body) )
-store = NodeCache, stdTTL = 86400 s (24 h)
-```
+**`cacheGet` applies to GET routes only**, and refuses any other method outright.
+Write responses are therefore uncacheable by construction.
 
-On a hit the middleware sends the stored body and **does not call `next()`** — GraphQL is
-never invoked. On a miss it monkey-patches `res.send` to write the outgoing body into the
-cache before delegating to the original, then calls `next()`.
+**The key is path + validated query + `X-User-Id`.** The caller is part of the key
+rather than a value that happens to sit inside a hashed request body, which is what
+stops one user's `reaction` values being served to another. It no longer depends on
+how the frontend builds its requests.
 
-**What that key implies.** Every request goes to the same URL, so the key is effectively
-the request body: the query text, byte for byte. Whitespace differences produce different
-keys. Because `userId` is interpolated into the query text rather than passed as a
-variable, per-user responses key separately and cannot leak between users — correct, but
-by accident of the fetch style rather than by design.
+**`invalidateOnWrite` is mounted once on the API router** and clears the cache after
+any non-GET request that returns under 400. Nothing has to be remembered inside a
+handler. A mutating route added tomorrow invalidates correctly without its author
+writing invalidation code — which is the point, because the previous design required
+every mutating resolver to call `myCache.flushAll()` and silently served stale reads
+for 24 hours if one forgot.
 
-**Invalidation is total and manual.** Every mutating resolver ends with
-`myCache.flushAll()`. There is no per-key or per-entity invalidation, so one vote empties
-the cache for every beer, every filter combination and every user. On a site with this
-traffic profile that is the right trade — a correct cache with a crude eviction beats a
-clever one that serves a stale vote count.
+It purges everything rather than tracking per-entity tags. Tags would need each route
+to declare them, reintroducing the thing a handler can forget, and the catalogue is
+2,410 rows. There is a `ponytail:` comment on the function saying so.
 
-**The ordering defect.** The flush happens *inside* the resolver; the response is written
-to the cache *after* the resolver returns, by the patched `res.send`. So a write's own
-response ends up cached in the freshly-emptied store. Concretely:
-
-```
-POST { comment(userId:"u" beerId:5 comment:"Nice") }   → INSERT, flushAll, cache["…"] = "You commented!"
-POST { comment(userId:"u" beerId:5 comment:"Nice") }   → cache HIT. No INSERT. Reports success.
-```
-
-Any intervening write flushes the entry and restores correct behaviour, which is why this
-is rarely seen. Errors cache identically: a `signUp` rejected for a duplicate username
-returns that same error for 24 h, or until the next write.
-
-**The fix, if this were revived,** is to skip caching for known write fields — or, better,
-to introduce a real `type Mutation` so the middleware can branch on operation type instead
-of guessing from a body it has to re-parse.
-
----
+`cacheGet` is annotated `MiddlewareHandler` rather than left inferred. It returns a
+text body on a hit, and Hono folds a middleware's return type into every route it is
+mounted on — left inferred, each cached route's response type gains a `string`
+variant and the frontend's typed client can no longer see the JSON shape.
 
 ## 5. The data model
 
-Five tables, in `backend/build/tables.sql`.
+Five tables. `db/01-schema.sql`, applied by the postgres image from
+`/docker-entrypoint-initdb.d` on an empty volume only — so restarting the stack
+never re-runs it and never duplicates the catalogue.
 
 ```
-breweries                       beers                          users
-──────────────                  ──────────────                 ──────────────
-id      INTEGER PK   ◄────┐     number  INTEGER                 id       VARCHAR(255) PK  ← a UUID v4
-name    TEXT              └──── brewery_id INTEGER FK           username TEXT              ← no UNIQUE
-city    TEXT                    id      INTEGER PK  ◄──┐                     ▲
-state   TEXT                    name    TEXT           │                     │
-                                style   TEXT           │                     │
-                                abv     REAL  ← 0–0.128│                     │
-                                ibu     REAL  ← 0–138, 0 = absent │                     │
-                                ounces  REAL           │                     │
-                                                       │                     │
-                     votes ─────────────────────────────┤                     │
-                     ──────────────                    │                     │
-                     id        PK AUTO_INCREMENT       │                     │
-                     beer_id   FK ────────────────────►┤                     │
-                     user_id   FK ─────────────────────┼─────────────────────┤ ON DELETE CASCADE
-                     vote_type CHECK IN (upvote,       │                     │
-                                         downvote,     │                     │
-                                         unreact)      │                     │
-                                                       │                     │
-                     comments ─────────────────────────┤                     │
-                     ──────────────                    │                     │
-                     id           PK AUTO_INCREMENT    │                     │
-                     beer_id      FK ─────────────────►┘                     │
-                     user_id      FK ───────────────────────────────────────►┘ ON DELETE CASCADE
-                     comment_text TEXT
-                     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+breweries ──< beers ──< votes >── users
+                   └──< comments >──┘
 ```
 
-Things this schema does and does not guarantee:
+- **`breweries`** — 558 rows. id, name, city, state.
+- **`beers`** — 2,410 rows. id, name, style, abv, ibu, ounces, brewery_id.
+- **`users`** — id (client-supplied UUID), username **unique**.
+- **`votes`** — one row per user per beer, `UNIQUE (user_id, beer_id)`, `vote_type`
+  constrained to `upvote` / `downvote` / `unreact`.
+- **`comments`** — user_id, beer_id, comment_text, created_at.
 
-- **`users.username` has no `UNIQUE` constraint.** Uniqueness is enforced only by a
-  `SELECT … LIMIT 1` check inside `signUp`, `updateUser` and `loginOrSignUp` — a
-  check-then-insert with no transaction around it. Two simultaneous signups for the same
-  name both pass the check and both insert. Since the entire identity model rests on
-  "username maps to one id", this is the schema's most important missing constraint.
-- **`votes` has no unique key on `(user_id, beer_id)`.** One vote per user per beer is
-  enforced by the `react` resolver reading before writing, with the same race.
-- **`ON DELETE CASCADE` runs from `users` only.** Deleting a user removes their votes and
-  comments. Deleting a beer is not modelled — the catalogue is static.
-- **`vote_type = 'unreact'`** is a stored row, not an absent one. Clearing a vote updates
-  the row rather than deleting it, so `votes` accumulates rows for every beer anyone ever
-  touched.
-- **`abv` and `ibu` are `REAL` and never `NULL`.** The seed generator writes `0` for a
-  missing value (`row.abv ? row.abv : 0`). 1,005 beers have a fabricated `ibu` of 0 and 62
-  a fabricated `abv` of 0. See [§13](#13-known-constraints).
+Three details that are easy to get wrong:
 
-### How the seed file is produced
+**`abv` and `ibu` are `DOUBLE PRECISION`, not `REAL`.** float4 cannot represent 0.05
+and serialises it as `0.05000000074505806`, which reaches the interface as an ABV of
+5.000000074%.
 
-`build/createSeedFile.js` truncates `database-seed.sql`, appends `build/tables.sql`, then
-streams both CSVs into two multi-row `INSERT` statements. It escapes `'` by doubling it
-and trims leading whitespace from brewery `state`.
+**`abv` is a fraction** (0.05 = 5%), matching `beers.csv`. The API takes whole
+percentages and divides.
 
-The two CSV streams are independent and unordered, so **which `INSERT` block lands first
-is not deterministic.** `beers` references `breweries(id)`, so if the beers block is
-written first the file will not load under a database that enforces foreign keys at
-insert time. MySQL and SQLite are both permissive enough by default that this has not
-bitten, which is exactly why it is worth writing down.
+**Missing `abv` and `ibu` are stored as `0`, not `NULL`.** 62 beers have no abv and
+1,005 — 42% of the catalogue — have no ibu. The range filters treat a missing value
+as 0, so storing `NULL` would silently drop those 1,005 beers from any ibu-filtered
+query.
 
----
+`users.username` is unique in the schema. It previously was not; the resolvers
+enforced it with a check-then-insert that two concurrent signups could both pass.
+
+### How the seed is produced
+
+`backend/build/generate-seed.ts` parses `beers.csv` and `breweries.csv` and emits
+`db/02-seed.sql`. Run it with `make seed`.
+
+It emits `COPY … FROM stdin` rather than `INSERT`: the native bulk path, four escape
+characters instead of SQL string quoting, one statement per table. Breweries are
+written before beers so the foreign key resolves — the previous script raced two
+async streams and got the order by luck.
+
+The CSVs are parsed as real CSV. Beer names contain commas and quotes, so splitting
+on `,` gives wrong answers on the name and style columns.
 
 ## 6. The query that does the work
 
-`beerResolver.beers` in `resolvers.ts` is where the catalogue's behaviour actually lives.
-Reading it once explains most of the frontend.
+`listBeers` in `backend/src/queries.ts`. One statement returning the page, each
+beer's vote total, this caller's own vote, and the total match count.
+
+Everything derived from the request is a **bound parameter** — including the `LIKE`
+pattern, `LIMIT`/`OFFSET`, and the style list. Two parts deserve explanation.
+
+**The style filter is one delimiter-joined parameter, split server-side:**
 
 ```sql
-SELECT
-  beers.id AS beer_id,
-  beers.name AS beer_name,
-  breweries.name AS brewery_name,
-  SUM(CASE WHEN votes.vote_type = 'upvote'   THEN  1
-           WHEN votes.vote_type = 'downvote' THEN -1
-           ELSE 0 END)                        AS vote_sum,      -- ① the score
-  IFNULL((SELECT vote_type FROM votes
-          JOIN users ON votes.user_id = users.id
-          WHERE users.id = '<userId>'
-            AND votes.beer_id = beers.id), 'unreact')
-                                              AS reaction,      -- ② this user's own vote
-  COUNT(beers.id) OVER()                      AS beer_count     -- ③ the full match count
-FROM beers
-JOIN      breweries ON beers.brewery_id = breweries.id
-LEFT JOIN votes     ON beers.id = votes.beer_id
-WHERE
-  beers.abv >= <minAbv/100> AND beers.abv <= <maxAbv/100>       -- ④ percent → fraction
-  AND beers.ibu >= <minIbu> AND beers.ibu <= <maxIbu>
-  AND LOWER(beers.name) LIKE '%<search>%'                       -- ⑤
-  [ AND beers.style IN ('…','…') ]                              -- ⑥
-GROUP BY beers.id, beers.name, breweries.name
-ORDER BY <vote_sum DESC | vote_sum ASC | beer_name ASC | beer_name DESC>,
-         beer_name ASC, beer_id                                 -- ⑦ stable tiebreak
-LIMIT <size> OFFSET <start>;
+AND ($6::text IS NULL OR b.style = ANY(string_to_array($6, chr(31))))
 ```
 
-**① `vote_sum` is derived, never stored.** Recomputed on every page of every query. At
-2,410 beers this costs nothing measurable, and it removes a denormalised counter that
-would need maintaining on every vote.
+Bun's `sql.unsafe()` sends a JS array as a scalar string, so binding an array
+directly against `text[]` fails with *malformed array literal*. `chr(31)` is the
+ASCII unit separator and cannot occur in a style name.
 
-**② `reaction` is a correlated subquery per row**, so the same catalogue looks different
-to different users, and the response for user A cannot be reused for user B — which is
-also why the cache keys them apart.
+**The sort direction is the one part assembled as text**, because a direction cannot
+be bound. It is selected by key from a frozen map, never built from caller input, and
+the validator rejects any `sort` outside the four known keys before a query runs.
 
-**③ `COUNT(*) OVER()` is the reason the UI can say "1,304 results" and know when to stop
-scrolling.** The window function is evaluated after `GROUP BY` and before `LIMIT`, so it
-counts matching beers, not returned rows. Every row carries the same value; the frontend
-reads it off row 0 (`beers[0]?.beer_count`) and compares it against `beers.length` to set
-`hasMore`. If the result set is empty there is no row 0, `beer_count` is `undefined`, and
-`hasMore` is `false` — which is the correct behaviour, reached by accident.
+```ts
+const ORDER_BY = Object.freeze({
+  top:  "vote_sum DESC, beer_name ASC, beer_id",
+  low:  "vote_sum ASC,  beer_name ASC, beer_id",
+  atoz: "beer_name ASC, beer_id",
+  ztoa: "beer_name DESC, beer_id",
+});
+```
 
-**④ The ABV unit conversion lives here**, and only here. The slider emits integer
-percentages; the column stores fractions; the resolver divides by 100. Three
-representations of one quantity, converted at one point — but the display conversion
-(`× 100`) happens separately in `Beer.tsx`, which is where it goes wrong on mobile.
-
-**⑤ Search is a leading-wildcard `LIKE`,** so no index can serve it; it is a scan. At this
-row count that is fine. `LOWER()` on the column makes the match case-insensitive on the
-haystack; the needle is lowercased client-side in `Actionbar.tsx` before it enters the
-context. Both halves are needed and they live in different files.
-
-**⑥ The `Other` bucket.** The frontend offers 15 named styles plus `Other`. When `Other`
-is checked the resolver pushes a hardcoded array of 85 further style names onto the
-requested list. 15 + 85 = 100, which is exactly the number of distinct styles in the data,
-and the two lists currently cover it with no gaps and no dead entries — verified, not
-assumed.
-
-That is a coincidence maintained by hand. The 85 are a literal in `resolvers.ts`, the 15
-are a literal in `Filters.tsx`, the 100 live in the CSV, and **nothing checks that the
-three still agree.** A style added to the dataset is silently unreachable through the UI
-until both literals are edited. One of the 85 is the empty string, which is how beers with
-a blank `style` column stay reachable at all.
-
-**⑦ The tiebreak matters.** Most beers have zero votes, so `ORDER BY vote_sum` alone
-leaves thousands of rows tied and the database free to return them in any order —
-different orders on different pages, which with offset pagination means duplicated and
-skipped rows as you scroll. Appending `beer_name ASC, beer_id` makes the order total, and
-the pagination correct.
-
----
+**Every entry ends in the beer's name and primary key, and that is load-bearing.**
+Most beers have zero votes, so ordering by `vote_sum` alone leaves thousands of rows
+tied and the planner free to return them in a different order per page — which,
+under offset pagination, duplicates and skips rows as the user scrolls. The tiebreak
+is what makes the order total. It looks redundant. It is not, and there is a test
+that pages the catalogue and asserts each beer appears exactly once.
 
 ## 7. Identity
 
-**What exists:** a `users` row holding a UUID v4 and a username, and two `localStorage`
-keys (`userNameBeerBuddy`, `userIdBeerBuddy`) holding the same pair on the client.
+`X-User-Id` carries a UUID the browser generated at first sign-in and kept in
+`localStorage`. It decides which votes a response reflects and which comments the
+caller may delete.
 
-**What does not exist:** passwords, sessions, tokens, cookies, an `Authorization` header,
-any server-side notion of who is calling. The `userId` is an ordinary GraphQL argument.
+**It is not authentication.** There is no password, no token, no session, and no
+server-side check that the caller is who the id says. Any client can send any value.
+The specs, this document and the README all say so; moving it to a header made the
+claim explicit rather than making it safe.
 
-So the security model is: **the user id is the credential, it is sent in cleartext as data,
-and it is not secret.** Anyone who obtains an id can vote and comment as that user and
-delete their account. Ids are UUID v4, so they are not guessable — but they are visible in
-`localStorage`, in every request body, and in the GraphiQL console.
+What changing it *did* fix is cache correctness. The id used to be interpolated into
+the GraphQL query string, and the cache keyed on an MD5 of the request body — so the
+id being *inside* the body was the only thing stopping user A's `reaction` values
+reaching user B. Correctness rested on how the frontend built fetch strings. It now
+rests on an explicit cache key.
 
-`protectRoute()` runs on mount of `App` and `Beer`, and before voting and commenting. It
-asks the server for the id belonging to the stored username and redirects to `/login` when
-the stored id disagrees, clearing `localStorage` first. That catches a stale or
-hand-edited client — it is a consistency check, not an authentication check, and it is
-worth being precise about the difference: nothing on the server ever refuses a request.
-
-For a public catalogue of beer opinions, marked as coursework, that is a proportionate
-design. It is written down here so nobody mistakes it for more than it is.
-
-**Logout takes two steps to do one thing.** The button in `App.tsx` removes only
-`userIdBeerBuddy`, then reloads. On the reloaded page `protectRoute()` finds a username
-with no id, calls `resetLocalStorage()` — which removes both keys — and redirects to
-`/login`, where `LogIn.tsx` finds no stored username and renders the form. The end state
-is correct. It depends on the guard running, though, which is the same reason the
-username must not be cleared first: `protectRoute` treats *either* key missing as a
-reset, and that is what completes the logout.
-
----
+Deleting a user cascades to their votes and comments through the foreign keys.
 
 ## 8. Frontend structure
 
-### Routing
+**Routing** — `react-router-dom` v7, four routes, `basename="/"`. One base path in
+development and in the production image, because the backend serves the bundle with
+an `index.html` fallback so a deep link resolves on a direct hit.
 
-`main.tsx` mounts four routes under `BrowserRouter basename="/"`:
+**State** — `FilterContext` plus local `useState`. No Redux, no query cache, no
+normalised store, for four screens. The context also loads `GET /api/styles` once and
+exposes `allStyles`.
 
-| Route | Component | Guard |
-| --- | --- | --- |
-| `/login` | `LogIn` | none — auto-submits if a username is already stored |
-| `/` | `App` | `protectRoute()` in a mount effect |
-| `/beer/:id` | `Beer` | `protectRoute()` in a mount effect |
-| `*` | `FallbackPage` | none |
+**Style filters are derived from the data.** The panel names 15 styles individually
+and offers "Other". "Other" expands to the complement — every style the API reports
+that is not one of the 15 — computed in `utils/beerStyles.ts`. Previously this was 15
+names in `Filters.tsx` and 85 in the backend's `otherStyles`, which together had to
+cover exactly the 100 distinct styles in the data with nothing enforcing it; editing
+one made a style unreachable. The complement cannot drift.
 
-The guard runs *after* first paint, so a signed-out visitor briefly sees the page before
-being redirected. Ant Design's dark algorithm and four token overrides are configured once
-here, at the `ConfigProvider`, which is why individual components rarely set colours.
+Note that `""` is one of those 100: five beers have no style, and the empty string
+must stay in the "Other" complement for them to remain selectable. `GET /api/styles`
+returns it deliberately, and it is never rendered as an option of its own. `"Other"`
+is itself a real style name in the dataset as well as the label, so selecting it
+matches both the literal style and the complement — as it did before.
 
-### State
+**Responsiveness is JavaScript**, via `useWindowDimensions()`, branching at 768 and
+1000 px. Those breakpoints are magic numbers duplicated across files; a seventh copy
+is the moment to extract a constant.
 
-`FilterContext` holds exactly five values — `searchString`, `IBU`, `ABV`, `styles`,
-`sorting` — and it is the only shared state in the application. It is initialised from
-`localStorage` on first render, so a returning visitor keeps their filters.
-
-Everything else is local `useState`. There is no Redux, no query cache, no normalised
-store: fetched data lives in the component that fetched it and is re-fetched when a
-dependency changes. For four screens that is the right amount of machinery.
-
-The re-fetch triggers are worth listing, because they are the whole data flow:
-
-| Change | Effect |
-| --- | --- |
-| `searchString` or `sorting` | `BeerList` effect → `fetchMore(true)` — immediate re-query, list replaced |
-| Filter sliders / checkboxes | **nothing**, until *Apply Filters* calls `fetchMore(true)` |
-| *Reset Filters* | clears the context **and** calls `fetchMore(true, true)` in one action |
-| Scroll to bottom | `InfiniteScroll` → `fetchMore()` — appends the next 10 |
-| `newVote` / `newComment` toggles | `useFetchBeer` effect → re-fetch the beer |
-
-The `newVote`/`newComment` booleans are flip-flags: a child calls `onSuccess`, the parent
-inverts the boolean, the effect's dependency array notices and re-fetches. It is a
-change-notification channel built out of a value nobody reads.
-
-### Optimistic voting
-
-`Voter` keeps the current reaction locally and computes the displayed score as
-`props.votes + values[localAction] − values[serverAction]`, where `values` maps
-`upvote → 2`, `unreact → 1`, `downvote → 0`. The differences between those numbers are
-what matter: switching from downvote to upvote moves the score by 2, and from neutral by
-1. The number therefore moves the instant you click, and the server value replaces it on
-the next fetch. Nothing reconciles a failed request — the fetch's result is not inspected
-— so a vote that fails on the server stays visible until a reload.
-
-### Responsiveness
-
-There is no CSS-only responsive layout. `useWindowDimensions()` subscribes to `resize` and
-returns live pixel dimensions, and components branch on them in JavaScript at three
-breakpoints:
-
-| Width | What changes |
-| --- | --- |
-| `> 1000` | Sidebar filters visible; the filter modal is force-closed |
-| `≤ 1000` | Sidebar hidden; filters move into a modal behind the filter button |
-| `> 768` | Desktop `BeerAttribute` tiles; `Select` for sorting; text "Comment" button |
-| `≤ 768` | `MobileBeerAttribute`; `SortingButton` dropdown; icon-only submit |
-
-This is a real trade. It gives one source of truth for a breakpoint and lets a branch swap
-component trees rather than restyle one — but it renders on every resize event, it ships
-both component trees to every client, and the breakpoints are duplicated as magic numbers
-across six files rather than living in a shared constant or a media query.
-
----
+**Two component libraries.** Ant Design throughout, and MUI for exactly one
+component — the ABV and IBU sliders. Ant Design's `Slider` failed the accessibility
+audit. See [`docs/accessibility.md`](docs/accessibility.md#material-ui-components)
+before deleting what looks like obvious bloat.
 
 ## 9. Accessibility as architecture
 
-Some of the accessibility work is structural rather than cosmetic, and removing it would
-break behaviour rather than looks. Those parts belong here; the full account is in
-[`docs/accessibility.md`](./docs/accessibility.md).
+Accessibility failures are test failures. `jest-axe` assertions run inside the unit
+suite, and every one of them passes.
 
-- **`vitest-axe` runs inside the unit suite.** Accessibility violations fail
-  `npm run test:vitest` like any other assertion, so a regression blocks CI rather than
-  waiting for a review.
-- **MUI is a dependency for exactly one component.** Ant Design's `Slider` failed the
-  audits, so the ABV and IBU sliders are MUI's, restyled to match. That is why the project
-  carries two component libraries — a real cost, taken deliberately, recorded here so
-  nobody "simplifies" it away.
-- **The infinite scroll has a keyboard escape.** `App.tsx` binds `Escape` to focus the
-  skip-link, because a keyboard user inside a list that grows as they reach its end can
-  otherwise never reach anything after it. Without this the page is a trap.
-- **The result counter is content, not decoration.** "1,304 results / Searched for: X /
-  Sorted by: Y" is rendered as text in a labelled region, so a screen reader user learns
-  that a filter changed the result set. Sighted users infer that from the list moving.
+The matcher comes from `jest-axe@11` registered through `expect.extend` in
+`src/vitest-setup.ts`, with its Vitest type declared in `src/vitest.d.ts`. It used to
+come from `vitest-axe`, which was last published in October 2022 and predates
+Vitest 1.0; the assertions are unchanged and one dependency is gone.
 
-The `Escape` binding has an implementation problem worth noting: `onEscape` is called
-during render and adds a `window` listener with no cleanup, so listeners accumulate on
-every render of `App`.
-
----
+The suite is render-plus-snapshot, so it is good at catching markup change and weak
+at catching wrong behaviour. A passing snapshot proves less than it looks like. When
+an axe assertion fails, read it — that one is behavioural.
 
 ## 10. Testing
 
-| | `npm run test:vitest` | `npm run test:e2e` |
-| --- | --- | --- |
-| Count | 84 tests, 17 files | 7 tests × 3 browsers |
-| Needs a backend | no | **the deployed one** |
-| Needs the VPN | no | yes |
-| Runtime | seconds | ~1.5 min |
-| Isolated | yes | **no — shared production database** |
-| What it proves | a component renders as before, and passes axe | a real user journey works end to end |
+| Suite            | Command              | What it covers                        |
+| ---------------- | -------------------- | ------------------------------------- |
+| Frontend unit    | `make test-frontend` | 85 tests: render, snapshot, axe       |
+| Backend contract | `make test-backend`  | 30 tests: routes, injection, cache    |
+| End-to-end       | `make test-e2e`      | Playwright against a disposable stack |
 
-The unit suite is render-plus-snapshot with axe assertions. Snapshots make it excellent at
-catching unintended markup change and poor at catching wrong behaviour: a component that
-renders the wrong data consistently keeps passing. `FilterContext` and `protectRoute` are
-the two non-component tests, and `protectRoute`'s is the only place a fetch is mocked.
+**The backend suite is new.** There were no backend tests before; a resolver could
+break with nothing catching it. Each block corresponds to a scenario in
+`openspec/changes/modernize-stack/specs/`. Requests go through Hono's
+`app.request()`, so nothing binds a port and the suite runs alongside a dev stack.
+`tests/setup.ts` builds a disposable `beers_test` database from `db/*.sql` before any
+test file is imported.
 
-The e2e suite drives `it2810-15.idi.ntnu.no` — not a local server, not a fixture. It
-creates real users, casts real votes and posts real comments against the production
-database, then calls `deleteUser` to clean up. Everything in
-[§13](#13-known-constraints) about it follows from that one fact.
+Four of those tests assert that injection attempts are matched as literal text and
+that the tables survive.
 
-**The backend has no test of its own.** Nine resolvers, every SQL string in the system,
-and the cache middleware are covered only by whatever the browser suite happens to
-exercise. If one change were worth making to this repository, it would be a handful of
-resolver tests against a throwaway SQLite file — the seed file already exists, and
-`sqlQuery` is the only seam that would need to move.
-
----
+**End-to-end drives a local stack.** `make test-e2e` starts the dev compose file with
+an override that puts it on its own ports under its own project name, runs Playwright,
+and removes the volume. It does not need a VPN, does not touch a shared database, and
+cannot disturb a running `make up`. Previously it drove the deployed site and wrote to
+the shared production database, so aborting a run leaked test users and comments onto
+everyone else.
 
 ## 11. Build and deployment
 
-**CI** (`.gitlab-ci.yml`, `node:19`, `only: merge_requests`): lint frontend, lint backend,
-prettier frontend, prettier backend, `test:vitest`, frontend build. Five stages are
-declared including `deploy`; no deploy job exists. Deployment to the VM was manual.
+**Development** — `make up`. Three services, source bind-mounted.
 
-**Containers.** Both Dockerfiles are `node:21.2.0-alpine`, `npm install`, `CMD npm run
-dev`. They run development servers; the frontend Dockerfile still carries the commented-out
-`npm ci --omit=dev` cache-mount block it was scaffolded from. `compose.yaml` bind-mounts
-each source directory over `/app` with an anonymous volume protecting `node_modules`, so
-edits on the host are live in the container. Useful for development, wrong for production,
-and there is no second compose file for production.
+**Production** — `make prod-up`. Two containers on pinned bases, multi-stage, running
+as `bun` rather than root, with no dev server or test tooling in the image.
 
-**The VM.** `it2810-15.idi.ntnu.no`, MySQL, frontend served under `/project2`, backend on
-`:3000`. The `/project2` base path is the origin of the routing inconsistency in
-[§13](#13-known-constraints); how the production bundle was actually built and served is
-not recorded anywhere in this repository, which is itself the gap.
+**Startup order is a health check.** The backend waits on
+`depends_on: condition: service_healthy`, driven by `pg_isready`. The previous setup
+had a `wait-for-database.sh` polling script that nothing invoked.
 
----
+**CI is GitHub Actions** (`.github/workflows/ci.yml`), running the same commands the
+Makefile runs locally. It replaced `.gitlab-ci.yml`, which targeted the NTNU GitLab
+instance the project was originally hosted on and therefore never ran against this
+GitHub remote.
+
+**There is no deployment target.** The NTNU VM is gone and nothing replaced it. The
+production compose file is the production *shape*, runnable locally.
+
+### Hot reload, honestly
+
+Vite's HMR works inside the container because `vite.config.ts` sets
+`server.watch.usePolling`. **Bun's `--hot` does not**: podman bind mounts on macOS do
+not deliver inotify events, so the watcher never fires. After a backend edit, run
+`make restart-backend`. If you want real backend hot reload, `make dev-backend` runs
+PostgreSQL in podman and the backend on the host — that needs host Bun ≥ 1.2.
 
 ## 12. Invariants
 
-Break one of these and the failure is quiet rather than loud.
+Things nothing enforces, that will fail quietly.
 
-1. **The catalogue query's `ORDER BY` must stay total.** Offset pagination over a
-   non-deterministic order duplicates and skips rows. The `beer_name ASC, beer_id`
-   tiebreak after the user's chosen sort is what prevents it.
-2. **`beer_count` must come from the same query as the rows.** It drives both the result
-   counter and the end of the infinite scroll; computing it separately would let the two
-   disagree mid-scroll.
-3. **Every mutating resolver must call `myCache.flushAll()` before returning.** There is
-   no finer invalidation. A write that forgets it leaves stale reads for up to 24 hours.
-4. **ABV crosses three representations** — fraction in the database, integer percent in
-   the filters, formatted percent on screen. Every boundary crossing must convert. This is
-   already violated once, on mobile.
-5. **A missing `ibu` or `abv` is stored as `0`, not `NULL`.** Any query that treats 0 as a
-   measured value inherits 1,005 fabricated data points.
-6. **The 85 styles in `resolvers.ts` and the 15 in `Filters.tsx` must together cover every
-   style in the data**, or a style becomes unreachable through the UI. They currently do,
-   exactly — 15 + 85 = the 100 in the CSV. Nothing enforces it.
-7. **`userId` must be interpolated into the query text, not passed as a GraphQL variable**
-   — otherwise every user shares a cache key and sees another user's `reaction` values.
-   The cache's correctness rests on a property of how the fetch strings are built.
-8. **The comment ownership check must exist in both places** — the render condition in
-   `CommentItem` and the `WHERE` clause in `deleteComment`. The first is a convenience;
-   only the second is enforcement.
-9. **Deleting a user must cascade.** The FK carries it. Without it, orphaned votes would
-   still count toward `vote_sum` and orphaned comments would break the `JOIN users`.
+1. **The `ORDER BY` tiebreak in `listBeers` must stay.** Section 6 explains why. A
+   test covers it.
+2. **All SQL values stay bound.** `sql``` binds; `sql.unsafe()` binds its second
+   argument. The only text assembled into a statement is an `ORDER BY` fragment from
+   a frozen map.
+3. **Route declarations stay chained** in `app.ts`, or they vanish from `AppType`.
+4. **MUI stays** for the ABV/IBU sliders. Section 8.
+5. **Dependency count is graded.** See [`docs/sustainability.md`](docs/sustainability.md).
+   If something needs a new package, say what it replaces.
+6. **The frontend build needs the backend's source and node_modules.** Section 2.
+7. **`X-User-Id` is never described as authentication.** Section 7.
 
----
+Three invariants the old architecture needed are now enforced by code rather than by
+discipline: cache invalidation after writes (mounted middleware), per-user cache
+isolation (the key includes the caller), and the two style lists staying in sync (the
+complement is computed).
 
-## 13. Known constraints
+## 13. Decisions
 
-Stated because they are real. The headline defects are in
-[README § Known problems](./README.md#known-problems); these are the structural limits
-underneath them.
+Why the stack is what it is. The full write-up, with alternatives, is in
+[`openspec/changes/modernize-stack/design.md`](openspec/changes/modernize-stack/design.md).
 
-**SQL is assembled by string interpolation, everywhere.** Not a subset of the resolvers —
-all of them. This bounds what the project can safely be: local, trusted-network,
-demonstration software. Sequelize's bind parameters are available and the change is
-confined to `resolvers.ts`.
+### Hono, not GraphQL
 
-**Identity is unauthenticated by construction.** [§7](#7-identity). Adding real
-authentication is not a patch; it is a server-side session concept that does not currently
-exist anywhere in the stack.
+The GraphQL layer was a costume. All six mutating operations were declared as
+`type Query`, every return type was `scalar Any`, and there was no GraphQL client —
+the frontend interpolated values into query strings by hand. Three dependencies and a
+hand-maintained schema bought one POST endpoint and zero type safety.
+`express-graphql` had also been archived by the GraphQL Foundation and takes no more
+fixes.
 
-**Uniqueness is enforced by check-then-insert, not by a constraint.** Username uniqueness
-and one-vote-per-beer are both application-level reads followed by writes with no
-transaction and no unique index. Concurrent requests can violate both. At this traffic
-level it has not happened; the schema is what would make it impossible.
+Hono runs natively on Bun and infers the client type from the route definitions, so
+the contract is checked at both ends with no generated artefact.
 
-**42 % of IBU values are fabricated zeroes.** The most user-visible consequence of the
-seed generator's `value ? value : 0`. Raising the IBU filter's minimum above 0 removes
-1,005 beers that may or may not be bitter. Fixing it means seeding `NULL` and teaching the
-`WHERE` clause and the display path to handle it — three coordinated changes.
+*Rejected:* GraphQL Yoga — modernises the server but keeps `scalar Any` and
+mutations-as-queries, which were the actual problem. tRPC — another client runtime
+dependency, and it makes HTTP semantics opaque, which defeats GET-only caching.
 
-**Search cannot scale.** `LIKE '%term%'` is a full scan by definition. Fine at 2,410 rows,
-and the wrong shape at 100,000.
+### PostgreSQL 18, not SQLite or MySQL
 
-**Offset pagination drifts under writes.** `LIMIT 10 OFFSET n` over an order that includes
-`vote_sum` means a vote cast while you are scrolling can shift a beer across a page
-boundary, and you see it twice or not at all. Keyset pagination is the fix; it was not
-worth it here.
+The app straddled two dialects whose differences leaked into the seed file as
+commented-out alternatives. PostgreSQL removes the fork and brings real `CHECK`
+constraints, `ON CONFLICT` for the vote upsert, and array parameters — the last
+eliminating the interpolated `IN (...)` list that was the widest injection surface.
 
-**The e2e suite is not isolated.** It writes to production. Two concurrent runs interfere;
-an aborted run leaks users and comments because cleanup is the last step; a slow VM looks
-identical to a failed assertion. `retries: 2` papers over the last of those.
+*Rejected:* SQLite alone — genuinely adequate at this scale and simpler, but the brief
+asked for the database to run as a podman service, and vote and comment writes are
+concurrent.
 
-**Two component libraries ship to every client.** Ant Design and MUI, for one slider. The
-reason is good ([§9](#9-accessibility-as-architecture)) and the bundle cost is real, and
-it sits awkwardly beside the sustainability argument for minimal dependencies.
+### `Bun.sql`, not a driver package
 
-**Nothing records how production was built.** No production Dockerfile, no deploy job, no
-serving config for the `/project2` base path. That is why the `basename` / `protectRoute`
-/ test-expectation disagreement cannot be resolved by reading this repository.
+Bun ships a PostgreSQL client with tagged-template binding, so the safe form is also
+the shortest form. This removed `sequelize`, `mysql2` and `sqlite3` for no replacement
+dependency. Sequelize was only ever a driver here — the catalogue query needs a window
+function and a correlated subquery, both awkward through an ORM.
 
----
+*Risk:* `Bun.sql` is younger than `pg`. The query surface is ten statements, and
+swapping it is contained behind `src/queries.ts`.
 
-## 14. What is deliberately absent
+### TypeScript 6.0.3, not 7
 
-| Not here | Why |
-| --- | --- |
-| A GraphQL client (Apollo, urql) | Argued explicitly: Apollo brings subscriptions, tracing and cloud integration this project never uses, and the dependency weight contradicts the sustainability requirement. `fetch` is the whole client. The cost is paid in [§2](#2-the-graphql-surface) — no variables, no fragments, no generated types. |
-| `type Mutation` | Not a decision so much as a consequence: `buildSchema` blocks were written with `Query` and never revisited. It is the root of the caching defect in [§4](#4-caching). |
-| Sequelize models and migrations | Raw SQL was preferred for control over the window function and the correlated subquery in [§6](#6-the-query-that-does-the-work), both awkward through an ORM. Migrations are unnecessary for a schema that ships as one seed file. |
-| A light theme | Dark by default is the sustainability argument, and a half-committed second theme is two mediocre designs. |
-| Server-side comment validation | The regex lives only in `CommentBar`. Any client that skips it can post anything. |
-| A password | See [§7](#7-identity). The threat model is coursework. |
-| Backend tests | The gap, not a decision. |
-| `signUp`, `updateUser`, `deleteUser` in the UI | `loginOrSignUp` superseded the first; the other two are reachable only through GraphiQL, and `deleteUser` exists in practice for e2e cleanup. |
-| Rate limiting, request logging, health checks | Nothing operational was built. The VM was started by hand. |
+TypeScript 7 (the native port) is current, but `typescript-eslint@8` declares
+`typescript: >=4.8.4 <6.1.0`. Type-aware linting is a CI gate, so the linter sets the
+ceiling. TS 7 is a follow-up once the peer range moves.
 
----
+### antd stays on 5
 
-## 15. Where a change attaches
+antd 6 shipped and supports React 19 natively, but it is a breaking major and
+component code was out of scope for this change. antd 5.29 works under React 19 here
+because every `message` call goes through `App.useApp()` rather than the static API
+that React 19 breaks — so no compatibility patch package is needed.
 
-If this were picked up again, in the order the seams allow:
+### The classic hook lint rules, not v7's
 
-**Parameterise the SQL.** One file, nine resolvers, mechanical: `sqlQuery` already funnels
-every call through one place, so it can take `(sql, replacements)` and pass them to
-`sequelize.query`. Everything else in the system is unaffected. This is the change that
-converts the project from "demo only" to "safe to expose".
+`eslint-plugin-react-hooks` v7's recommended preset adds the React Compiler rules.
+They flag ten pre-existing patterns: the `ref.current = prop` assignment in
+`BeerList`, `Filters` and `App`, and the setState-then-fetch shape in every data hook.
+Those are worth addressing, but rewriting the data-fetching layer is a separate change
+from a version bump, so the config enables the two rules
+`plugin:react-hooks/recommended` meant on v4 and says why.
 
-**Give the backend tests.** `sqlQuery` is the seam. Point `db.ts` at a temporary SQLite
-file seeded from `database-seed.sql`, and the nine resolvers become testable without a
-browser, a VPN, or the production database.
+## 14. Known constraints
 
-**Introduce `type Mutation`.** Moves six fields, makes `cacheMiddleware` able to branch on
-operation type instead of caching writes, and lets the client stop pretending a delete is
-a read. It is a breaking change to every write call site — but there are only six.
+Real limitations, stated rather than hidden.
 
-**Type the responses.** Replacing `scalar Any` with real object types makes the schema the
-contract instead of the `SELECT`, and makes the duplicated `Beer` interfaces in
-`types.ts`, `useFetchMoreBeers.tsx` and `BeerList.tsx` generatable rather than
-hand-maintained.
+- **No authentication.** Section 7. This is the big one.
+- **No rate limiting.** Any client can write as fast as it likes.
+- **Offset pagination.** Correct, because of the tiebreak, but it re-scans on deep
+  pages. Fine for 2,410 rows.
+- **The cache purges wholesale on any write.** A single vote empties it. Acceptable at
+  this size; measure before adding tags.
+- **The bundle is one 987 kB chunk** (312 kB gzipped). No code splitting.
+- **Backend hot reload does not work in-container on macOS.** Section 11.
+- **Five beers have no style** and are only reachable through the "Other" filter.
+- **`vote_type = 'unreact'`** is stored as a row rather than the row being deleted, so
+  an "unreacted" vote still occupies a row. It counts as 0 in every aggregate.
+- **Ten React Compiler lint rules are switched off.** Section 13.
 
-**Make the e2e suite hermetic.** Point `playwright.config.ts` at a `webServer` running
-locally against a scratch database. The tests themselves barely change — the URLs are
-hardcoded in `beerbuddy.spec.ts` and would move to `baseURL`. This removes the VPN
-requirement, the interference between runs, and the leaked test data in one move.
+## 15. What is deliberately absent
 
-**Seed `NULL` for missing measurements**, and teach the filter and the display to say
-"unknown". Three coordinated edits — `createSeedFile.js`, the `WHERE` clause in `beers`,
-and the attribute tiles — and it makes 42 % of the catalogue honest.
+- **A GraphQL client.** There is no GraphQL.
+- **A state management library.** Four screens.
+- **An ORM.** Raw SQL, because the catalogue query needs it.
+- **A codegen step.** Types cross the wire by inference.
+- **A CSS framework.** CSS Modules per component; colours from the antd theme tokens
+  in `main.tsx`.
+- **A deployment target.** Section 11.
+
+## 16. Where a change attaches
+
+| To change…                     | Start at                                                                        |
+| ------------------------------ | ------------------------------------------------------------------------------- |
+| A route's shape                | `backend/src/app.ts` (the chained declarations)                                  |
+| What a query returns           | `backend/src/queries.ts`                                                         |
+| The schema                     | `backend/db/01-schema.sql`, then `make reset`                                    |
+| Caching                        | `backend/src/cache.ts`                                                           |
+| How the frontend calls the API | `frontend/src/api/client.ts`                                                     |
+| Application types              | `frontend/src/types/types.ts` (derived — usually you change the backend instead) |
+| Filter options                 | `frontend/src/utils/beerStyles.ts`                                               |
+| Theme and colours              | `frontend/src/main.tsx`                                                          |
+| How anything starts            | `Makefile`, `compose.yaml`                                                       |
+
+Adding a route: declare it in the chain in `app.ts` with a Zod validator, put its SQL
+in `queries.ts`, and it inherits validation, the error shape and cache invalidation.
+If it is a `GET` you want cached, add `cacheGet` to it. Then add a test to
+`backend/tests/api.test.ts` — nothing else guards the backend.

@@ -14,15 +14,37 @@ Our fetching does not fetch more data than necessary, saving a lot of bandwidth 
 
 ## Database
 
-Initially, we used Docker and PostgreSQL as a relational database is capable of handling large datasets in an efficient way. However, due to restrictions on Docker usage, we had to switch our database.
+The project runs a single PostgreSQL 18 instance, in every environment.
 
-We now use SQLite, a lightweight, file-based relational database, for efficiency and sustainability. Its small footprint saves energy as it doesn't require a separate server process. Plus, its support for complex queries reduces CPU usage by minimizing the need for multiple joins. In addition to SQLite, it is also possible to use MySQL as the database for this project. MySQL is a powerful, open-source relational database system that is very fast and reliable. It can handle large datasets and supports complex queries, similar to SQLite. To use MySQL, please follow the instructions provided [here](../backend/README.md#running-against-mysql). Please note that using MySQL may require more resources than SQLite, but it can provide better performance for larger datasets.
+It previously carried two engines — SQLite locally and MySQL on the virtual machine —
+which meant two dialects, two sets of behaviour to reason about, and a schema file
+holding commented-out alternatives for each. Maintaining two paths costs more
+developer time and more CI work than either path saves in resources, and the
+differences between them were a source of defects rather than of efficiency.
 
-The virtual machine is using MySQL as the database. This is because SQLite is unsuitable for large datasets, and we wanted to demonstrate that our solution can handle large datasets. We wanted to keep SQLite as the default database when cloning the project because it is much easier to set up and use than MySQL. And it does not require a separate server process.
+One engine also lets the catalogue be read in a single statement. The list query
+returns the page, each beer's vote total, the caller's own vote and the total match
+count together, using a window function and an upsert that neither of the previous
+engines supported the same way. Fewer round trips is less work for both machines.
 
-## GraphQL
+The database runs as a container with a named volume, so no database file is
+tracked in git and no developer needs a database installed on their machine.
 
-We use GraphQL to fetch data from the database. This means that we can fetch exactly the data we need and nothing more. This saves a lot of bandwidth and energy.
+## The API
+
+The API is resource-oriented HTTP/JSON. Each route returns exactly the fields the
+screen needs and nothing more, which is what keeps responses small.
+
+This replaced a GraphQL layer that was not doing GraphQL work: every operation,
+including the six that write, was declared as a query, and every response type was
+`scalar Any`. There was no GraphQL client either — the frontend built query strings
+by interpolation. It cost three dependencies and a hand-maintained schema to get one
+endpoint, and none of the bandwidth argument for GraphQL applied, because no client
+was ever selecting fields.
+
+The replacement also removed a real waste: responses to writes used to be cached.
+Only `GET` is cacheable now, so a repeated write reaches the database exactly once
+instead of being answered from a stale entry.
 
 ## Delayed searching, sorting and filtering
 
@@ -38,11 +60,55 @@ Our icons and images are made with SVG. This means that they are very small in s
 
 ## Hosting
 
-Our website is hosted in Norway which means that the data does not have to travel as far as if it was hosted in another country, saving bandwidth and data.
+The project no longer targets a hosted deployment. It was previously served from a
+virtual machine in Norway, which kept data close to its users; that machine is gone
+and nothing replaced it.
+
+What remains is a production image that runs the API and the built bundle from a
+single container, so a deployment would be two processes rather than three. Serving
+the frontend from the same origin as the API also removes a cross-origin preflight
+from every request.
 
 ## Dependencies
 
-We have tried to keep our dependencies to a minimum. This means that we avoid unnecessary code and unnecessary updates. Each npm install and npm update requires a lot of energy, so by keeping our dependencies to a minimum we can reduce the energy consumption of our website. We also remove unused dependencies when we no longer need them.
+We keep dependencies to a minimum. Every install and update costs energy, and every
+package is code that has to be fetched, audited and updated.
+
+The current count, direct dependencies only:
+
+| | Runtime | Dev | Total |
+| -------- | ------: | --: | ----: |
+| Backend  | 3 | 6 | 9 |
+| Frontend | 9 | 21 | 30 |
+| **Total** | **12** | **27** | **39** |
+
+That is down from **55** (24 runtime, 31 dev). The backend fell from 25 to 9.
+
+Twenty-two backend packages were removed and six added. The removals were possible
+because the runtime does more:
+
+- **Bun runs TypeScript directly**, so `tsx` and `nodemon` are unnecessary and there
+  is no build step or `dist/` output.
+- **Bun reads `.env` natively**, so `dotenv` is unnecessary.
+- **Bun ships a PostgreSQL client**, so `sequelize`, `mysql2` and `sqlite3` are all
+  unnecessary — and Sequelize was only ever a driver here, since the catalogue query
+  needs raw SQL anyway.
+- **Dropping GraphQL** removed `express`, `express-graphql`, `graphql`,
+  `@graphql-tools/schema`, `body-parser` and `cors`; Hono covers routing and CORS.
+- **`crypto` and `fs`** were npm packages shadowing Node's own modules. Neither did
+  anything.
+
+On the frontend, `vitest-axe` was removed in favour of `jest-axe`, which was already
+present and is still maintained — the accessibility assertions are unchanged and the
+dependency count fell by one. `@types/uuid` and `autoprefixer` went too, the first
+because `uuid` now ships its own types and the second because nothing used it.
+
+The frontend's type-safety across the API costs no runtime dependency at all: the
+types are imported from the backend's source and erased at build time, so nothing
+from the backend reaches the bundle and there is no generated client to maintain.
+
+If something genuinely needs a new package, say what it replaces and why the
+argument above no longer holds.
 
 ## Caching
 
