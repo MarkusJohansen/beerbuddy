@@ -1,8 +1,12 @@
 import { render, act } from "@testing-library/react";
-import { FilterContextProvider, FilterContextType } from "./FilterContext";
+import { FilterContextProvider, type FilterContextType } from "./FilterContext";
 import { FilterContext } from "./FilterContext";
-import { ReactNode, useContext as useContextMock } from "react";
+import { type ReactNode, useContext as useContextMock } from "react";
 import { vi, vitest } from "vitest";
+
+// The provider loads the catalogue's styles on mount; a unit test should not
+// reach the network for them.
+vi.mock("../api/client", () => ({ fetchStyles: vi.fn(async () => []) }));
 import { useState as useStateMock } from "react";
 import { useEffect as useEffectMock } from "react";
 

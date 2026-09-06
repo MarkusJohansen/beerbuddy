@@ -1,8 +1,18 @@
-import { Mock, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, fireEvent, waitFor, act } from "@testing-library/react";
 import CommentBar from "./CommentBar";
 import { axe } from "jest-axe";
+import { addComment } from "../../api/client";
 
+// CommentBar posts through the typed client now, so that is what is replaced.
+vi.mock("../../api/client", () => ({
+  addComment: vi.fn(async () => ({ id: 1 })),
+}));
+vi.mock("../../utils/protectRoute", () => ({
+  default: vi.fn(async () => false),
+}));
+
+const mockedAddComment = vi.mocked(addComment);
 const mockError = vi.fn();
 const mockSuccess = vi.fn();
 
@@ -26,24 +36,15 @@ vi.mock("react-router-dom", () => ({
   useParams: () => ({ id: "1" }),
 }));
 
-global.window.location = {
-  ...global.window.location,
-  replace: vi.fn(() => {}),
-};
-
-/**
- * Mock fetch to always return a successful response.
- */
-global.fetch = vi.fn(() =>
-  Promise.resolve({
-    ok: true,
-    json: () => Promise.resolve(),
-  })
-) as Mock;
+Object.defineProperty(global.window, "location", {
+  writable: true,
+  value: { ...global.window.location, replace: vi.fn() },
+});
 
 describe("CommentBar", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockedAddComment.mockResolvedValue({ id: 1 });
   });
 
   it("should match snapshot", () => {
@@ -107,13 +108,8 @@ describe("CommentBar", () => {
     //prevent stderr from printing expected error message, keeps test output clean
     vi.spyOn(console, "error").mockImplementation(() => {});
 
-    /* Mock fetch to always return an unsuccessful response */
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: false,
-        json: () => Promise.resolve(),
-      })
-    ) as Mock;
+    /* The client throws on a failing response */
+    mockedAddComment.mockRejectedValue(new Error("Request failed (500)"));
 
     const { getByPlaceholderText, getAllByText } = render(
       <CommentBar onSuccess={() => {}} />
@@ -168,26 +164,26 @@ describe("CommentBar", () => {
     fireEvent.click(button);
 
     await waitFor(() => expect(mockSuccess).not.toHaveBeenCalled());
+  });
 
-    it("should render a button without text when the screen width is less than 768px", () => {
-      const { getByAltText, queryByText, queryByRole } = render(
-        <CommentBar onSuccess={() => {}} />
-      );
+  it("should render a button without text when the screen width is less than 768px", () => {
+    const { getByAltText, queryByRole } = render(
+      <CommentBar onSuccess={() => {}} />
+    );
 
-      expect(queryByRole("img")).not.toBeInTheDocument();
-      expect(queryByText("Comment")).toBeInTheDocument();
+    /* Queried by role rather than by text: "Comment" is also the field's label,
+       so a plain text query matches two elements and throws. */
+    expect(queryByRole("img")).not.toBeInTheDocument();
+    expect(queryByRole("button", { name: "Comment" })).toBeInTheDocument();
 
-      // Mock the window width to be 500px.
-      // This is done to ensure the correct text is rendered.
-      global.innerWidth = 500;
-      act(() => {
-        global.dispatchEvent(new Event("resize"));
-      });
-
-      // The button should now have a send icon instead of "Comment".
-      expect(getByAltText("Send icon")).toBeInTheDocument();
-      expect(queryByText("Comment")).not.toBeInTheDocument();
-      expect(queryByRole("img")).toBeInTheDocument();
+    // Narrow the viewport; the button should swap its label for a send icon.
+    global.innerWidth = 500;
+    act(() => {
+      global.dispatchEvent(new Event("resize"));
     });
+
+    expect(getByAltText("Send icon")).toBeInTheDocument();
+    expect(queryByRole("button", { name: "Comment" })).not.toBeInTheDocument();
+    expect(queryByRole("img")).toBeInTheDocument();
   });
 });

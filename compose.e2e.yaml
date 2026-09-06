@@ -1,0 +1,25 @@
+# Override that runs the dev stack on its own ports under its own project name, so
+# `make test-e2e` neither collides with nor wipes a running `make up`.
+#
+# The e2e database is a throwaway volume belonging to this project. The suite used
+# to drive the deployed site and write to the shared production database, which is
+# why aborting a run leaked test users and comments onto everyone else.
+
+name: beerbuddy-e2e
+
+services:
+  db:
+    ports:
+      - "5533:5432"
+
+  backend:
+    environment:
+      CORS_ORIGINS: http://localhost:5273
+    ports:
+      - "3100:3000"
+
+  frontend:
+    environment:
+      VITE_APP_BACKEND_URL: http://localhost:3100/api
+    ports:
+      - "5273:5173"

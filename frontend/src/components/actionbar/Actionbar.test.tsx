@@ -42,6 +42,7 @@ describe("Actionbar", () => {
 
   it("renders with correct searchbar", () => {
     const { getByRole } = render(<Actionbar fetchMore={fetchMore} />);
-    expect(getByRole("textbox")).toBeInTheDocument();
+    // antd's Input.Search renders <input type="search">, whose role is searchbox.
+    expect(getByRole("searchbox")).toBeInTheDocument();
   });
 });

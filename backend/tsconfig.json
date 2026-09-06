@@ -1,27 +1,19 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "module": "nodenext",
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "outDir": "dist/",
+    "lib": ["ESNext"],
+    "target": "ESNext",
+    "module": "Preserve",
+    "moduleResolution": "bundler",
+    "types": ["bun"],
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
 
-    /* Bundler mode */
-    "moduleResolution": "nodenext",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": false,
-    "jsx": "react-jsx",
-
-    /* Linting */
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true
   },
-  "include": ["**/*.ts", "**/*.tsx", "./vite.config.ts", "src/vitest-setup.ts"],
-  "references": [{ "path": "./tsconfig.node.json" }],
-  "ts-node": { "esm": true, "experimentalSpecifierResolution": "node" }
+  "include": ["src", "build", "tests"]
 }

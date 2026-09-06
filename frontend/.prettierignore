@@ -1,5 +1,7 @@
 node_modules
-
-# Ignore artifacts:
-build
+dist
 coverage
+bun.lock
+**/__snapshots__
+test-results
+playwright-report

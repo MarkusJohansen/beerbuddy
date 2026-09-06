@@ -4,10 +4,10 @@ exports[`UserIntro > renders correctly 1`] = `
 <div>
   <header
     aria-label="User intro"
-    class="_headingWrapper_95bd34"
+    class="_headingWrapper_c8bfa2"
   >
     <h1
-      class="_heading_95bd34"
+      class="_heading_c8bfa2"
     >
       <b>
         Welcome
@@ -17,12 +17,12 @@ exports[`UserIntro > renders correctly 1`] = `
     </h1>
     <img
       alt="Beer clinking Emoji"
-      class="_emoji_95bd34"
-      src="/project2/beerEmoji.svg"
+      class="_emoji_c8bfa2"
+      src="/beerEmoji.svg"
     />
   </header>
   <hr
-    class="_separator_95bd34"
+    class="_separator_c8bfa2"
   />
 </div>
 `;

@@ -1,75 +1,76 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
 import protectRoute from "./protectRoute";
+import { fetchSession } from "../api/client";
 
-/**
- * Mocking localStorage
- */
-global.localStorage = {
-  ...global.localStorage,
-  getItem: () => "test",
-  removeItem: vi.fn(() => {}),
-};
+vi.mock("../api/client", () => ({ fetchSession: vi.fn() }));
 
-const mockReplace = vi.fn(() => {});
+const mockedFetchSession = vi.mocked(fetchSession);
+const mockReplace = vi.fn();
+const store: Record<string, string | null> = {};
 
-global.window.location = {
-  ...global.window.location,
-  replace: mockReplace,
-};
+// jsdom 30 defines localStorage as a readonly accessor, so it is stubbed rather
+// than assigned.
+vi.stubGlobal("localStorage", {
+  getItem: (key: string) => store[key] ?? null,
+  setItem: (key: string, value: string) => {
+    store[key] = value;
+  },
+  removeItem: vi.fn((key: string) => {
+    store[key] = null;
+  }),
+  clear: vi.fn(),
+});
+
+Object.defineProperty(global.window, "location", {
+  writable: true,
+  value: { ...global.window.location, replace: mockReplace },
+});
 
 describe("protectRoute", () => {
   beforeEach(() => {
     mockReplace.mockClear();
+    store.userNameBeerBuddy = "test";
+    store.userIdBeerBuddy = "user-1";
   });
 
-  it("returns false if logged in", async () => {
-    vi.spyOn(global, "fetch").mockImplementation(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ data: { login: [{ id: "test" }] } }),
-      } as Response)
-    );
-    const res = await protectRoute();
+  it("stays put when the stored id belongs to the stored username", async () => {
+    mockedFetchSession.mockResolvedValue({ id: "user-1", username: "test" });
+
+    expect(await protectRoute()).toBe(false);
     expect(mockReplace).not.toHaveBeenCalled();
-    expect(res).toBe(false);
   });
 
-  it("returns true if there are no users with username", async () => {
-    vi.spyOn(global, "fetch").mockImplementation(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ data: { login: [] } }),
-      } as Response)
-    );
-    const res = await protectRoute();
-    expect(mockReplace).toHaveBeenCalledWith("/project2/login");
-    expect(res).toBe(true);
+  it("redirects when the id belongs to nobody", async () => {
+    mockedFetchSession.mockResolvedValue(null);
+
+    expect(await protectRoute()).toBe(true);
+    expect(mockReplace).toHaveBeenCalledWith("/login");
   });
 
-  it("returns true if localstorage is different from logged in user", async () => {
-    vi.spyOn(global, "fetch").mockImplementation(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ data: { login: [{ id: "blabla" }] } }),
-      } as Response)
-    );
-    const res = await protectRoute();
-    expect(mockReplace).toHaveBeenCalledWith("/project2/login");
-    expect(res).toBe(true);
+  it("redirects when the id belongs to a different username", async () => {
+    mockedFetchSession.mockResolvedValue({
+      id: "user-1",
+      username: "somebody-else",
+    });
+
+    expect(await protectRoute()).toBe(true);
+    expect(mockReplace).toHaveBeenCalledWith("/login");
   });
 
-  it("has no values in localstorage", async () => {
-    vi.spyOn(global, "fetch").mockImplementation(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ data: { login: [{ id: "blabla" }] } }),
-      } as Response)
-    );
-    global.localStorage = {
-      ...global.localStorage,
-      getItem: () => null,
-    };
-    await protectRoute();
-    expect(mockReplace).toHaveBeenCalledWith("/project2/login");
+  it("redirects when localStorage is empty, without calling the API", async () => {
+    store.userNameBeerBuddy = null;
+    store.userIdBeerBuddy = null;
+
+    expect(await protectRoute()).toBe(true);
+    expect(mockedFetchSession).not.toHaveBeenCalled();
+    expect(mockReplace).toHaveBeenCalledWith("/login");
+  });
+
+  it("redirects when the API call fails", async () => {
+    mockedFetchSession.mockRejectedValue(new Error("network"));
+
+    expect(await protectRoute()).toBe(true);
+    expect(mockReplace).toHaveBeenCalledWith("/login");
   });
 });

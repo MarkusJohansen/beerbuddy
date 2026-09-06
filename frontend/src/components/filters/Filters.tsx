@@ -1,5 +1,6 @@
 import { Button, Checkbox, Collapse, Divider, Tooltip } from "antd";
-import { Slider, SliderProps, alpha, styled } from "@mui/material";
+import { Slider, alpha, styled } from "@mui/material";
+import type { SliderProps } from "@mui/material";
 import { useContext, useId, useRef } from "react";
 import { FilterContext } from "../../context/FilterContext";
 import {
@@ -8,26 +9,7 @@ import {
   RightOutlined,
 } from "@ant-design/icons";
 import { default as CSSstyles } from "./Filters.module.css";
-
-// Styles of beer that can be filtered on
-const beerStyles = [
-  "American IPA",
-  "American Pale Ale (APA)",
-  "American Amber / Red Ale",
-  "American Blonde Ale",
-  "American Double / Imperial IPA",
-  "American Pale Wheat Ale",
-  "American Brown Ale",
-  "American Porter",
-  "Saison / Farmhouse Ale",
-  "Witbier",
-  "Fruit / Vegetable Beer",
-  "Kölsch",
-  "Hefeweizen",
-  "American Pale Lager",
-  "American Stout",
-  "Other",
-];
+import { STYLE_OPTIONS } from "../../utils/beerStyles";
 
 // Styled slider component from MUI
 const StyledSlider = styled(Slider)<SliderProps>(() => ({
@@ -73,7 +55,7 @@ const Filters = ({ fetchMore, apply }: FiltersProps) => {
   const resetFilters = (e: React.MouseEvent) => {
     /* Only reset filters and fetch beers if there are active filters */
     if (
-      beerStyles.length > 0 ||
+      styles.length > 0 ||
       ABV[0] !== 0 ||
       ABV[1] !== 13 ||
       IBU[0] !== 0 ||
@@ -113,7 +95,7 @@ const Filters = ({ fetchMore, apply }: FiltersProps) => {
             ),
             children: (
               <Checkbox.Group
-                options={beerStyles}
+                options={STYLE_OPTIONS}
                 name="styles"
                 onChange={(checkedValues) =>
                   setStyles(checkedValues.map((value) => value.toString()))

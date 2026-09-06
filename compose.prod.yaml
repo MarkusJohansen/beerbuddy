@@ -1,0 +1,48 @@
+# Production stack: two containers. The app image serves the API and the built
+# frontend bundle from the same origin.
+#
+# `make prod-up`. Nothing here deploys anywhere — it is the production shape,
+# runnable locally, which is what replaced the single NTNU VM.
+
+name: beerbuddy-prod
+
+services:
+  db:
+    image: docker.io/library/postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-beerbuddy}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-beers}
+    volumes:
+      - db-data:/var/lib/postgresql
+      - ./backend/db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-beerbuddy} -d ${POSTGRES_DB:-beers}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod
+      args:
+        # Same origin as the app itself, so the bundle needs no absolute host.
+        VITE_APP_BACKEND_URL: /api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-beerbuddy}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-beers}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+      PORT: "3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:3000"
+
+volumes:
+  db-data:

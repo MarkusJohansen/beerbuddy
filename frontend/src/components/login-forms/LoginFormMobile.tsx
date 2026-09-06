@@ -1,5 +1,5 @@
 import { Button, Card, Form, Input, theme } from "antd";
-import { ValidateErrorEntity } from "rc-field-form/lib/interface";
+import type { ValidateErrorEntity } from "rc-field-form/lib/interface";
 import styles from "./LoginFormMobile.module.css";
 import Logo from "../logo/Logo";
 

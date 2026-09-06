@@ -5,17 +5,16 @@ import { useEffect, useRef } from "react";
 import { useContext } from "react";
 import { FilterContext } from "../../context/FilterContext";
 
-type ReactionType = "unreact" | "upvote" | "downvote";
+import type { BeerListItem } from "../../types/types";
 
 interface BeerListProps {
-  beers: {
-    beer_id: number;
-    beer_name: string;
-    brewery_name: string;
-    vote_sum: number;
-    beer_count: number;
-    reaction: ReactionType;
-  }[];
+  beers: BeerListItem[];
+  /**
+   * How many beers match the current filters. Previously read off
+   * beers[0].beer_count, because the catalogue query repeated the total on every
+   * row; the API returns it once now.
+   */
+  totalCount: number;
   fetchMore: (reset?: boolean, noFilters?: boolean) => Promise<void>;
 }
 
@@ -45,7 +44,7 @@ const translateSorting = (sorting: string) => {
  * @param props - The interface for the BeerList component.
  * @returns  - The beer list component.
  */
-const BeerList = ({ beers, fetchMore }: BeerListProps) => {
+const BeerList = ({ beers, totalCount, fetchMore }: BeerListProps) => {
   const { searchString, sorting } = useContext(FilterContext);
 
   const fetchMoreRef = useRef(fetchMore);
@@ -63,9 +62,7 @@ const BeerList = ({ beers, fetchMore }: BeerListProps) => {
         aria-label="Search and sorting information"
       >
         <div className={styles.resultsHeader}>
-          <h2 className={styles.resultsInfo}>
-            {beers[0]?.beer_count ?? 0} results
-          </h2>
+          <h2 className={styles.resultsInfo}>{totalCount} results</h2>
         </div>
         <p className={styles.resultsInfo}>Searched for: "{searchString}"</p>
         <p className={styles.resultsInfo}>
@@ -76,7 +73,7 @@ const BeerList = ({ beers, fetchMore }: BeerListProps) => {
         <InfiniteScroll
           dataLength={beers.length}
           next={fetchMoreRef.current}
-          hasMore={beers?.length < beers[0]?.beer_count}
+          hasMore={beers.length < totalCount}
           loader={
             <p style={{ textAlign: "center" }}>
               <b>Loading...</b>

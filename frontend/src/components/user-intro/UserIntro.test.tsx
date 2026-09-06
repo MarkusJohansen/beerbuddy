@@ -4,12 +4,17 @@ import "@testing-library/jest-dom";
 import UserIntro from "./UserIntro";
 import { act } from "react-dom/test-utils";
 import { axe } from "jest-axe";
+import { vi } from "vitest";
 
-// Mock localStorage so it returns "Erik".
-global.localStorage = {
-  ...global.localStorage,
-  getItem: () => "Erik",
-};
+// jsdom 30 defines localStorage as a readonly accessor, so it is stubbed rather
+// than assigned. Returns "Erik" unless a test overrides it.
+let storedName = "Erik";
+vi.stubGlobal("localStorage", {
+  getItem: () => storedName,
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+});
 
 describe("UserIntro", () => {
   it("is accessible", async () => {
@@ -41,11 +46,7 @@ describe("UserIntro", () => {
   });
 
   it("renders with no name", () => {
-    // Mock localStorage so it returns an empty string.
-    global.localStorage = {
-      ...global.localStorage,
-      getItem: () => "",
-    };
+    storedName = "";
     render(<UserIntro />);
 
     expect(screen.queryByText("Welcome")).toBeInTheDocument();

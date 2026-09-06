@@ -1,10 +1,12 @@
 import { App } from "antd";
+import type { ValidateErrorEntity } from "rc-field-form/lib/interface";
+import { useCallback, useEffect, useState } from "react";
+import { v4 } from "uuid";
+
 import useWindowDimensions from "../utils/useWindowDimensions";
-import { ValidateErrorEntity } from "rc-field-form/lib/interface";
 import LoginFormMobile from "../components/login-forms/LoginFormMobile";
 import LoginFormDesktop from "../components/login-forms/LoginFormDesktop";
-import { v4 } from "uuid";
-import { useEffect, useState } from "react";
+import { createSession } from "../api/client";
 
 /**
  * Callback for when the form fails to validate.
@@ -17,43 +19,6 @@ const onFinishFailed = (
 };
 
 /**
- * Fetches the login id from the backend.
- * @param username - the username to login with
- * @param uuid - the user id to login with
- * @param setIsNewUser - function to set isNewUser
- * @param isNewUser - the isNewUser state
- */
-const fetchLoginId = async (
-  username: string,
-  uuid: string,
-  setIsNewUser: React.Dispatch<React.SetStateAction<string>>,
-  isNewUser: string
-) => {
-  const res = await fetch(import.meta.env.VITE_APP_BACKEND_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({
-      query: `{ loginOrSignUp(username: "${username}" uuid: "${uuid}") }`,
-    }),
-  }).then((r) => r.json());
-
-  if (!localStorage.getItem("userIdBeerBuddy")) {
-    localStorage.setItem("userIdBeerBuddy", res.data.loginOrSignUp.id);
-  }
-
-  if (!isNewUser) {
-    setIsNewUser(res.data.loginOrSignUp.isNewUser);
-  }
-
-  setTimeout(() => {
-    window.location.replace("/");
-  }, 2000);
-};
-
-/**
  * LogInPage component that displays the login form.
  * @returns a LogInPage component
  */
@@ -61,27 +26,46 @@ const LogInPage = () => {
   const { message } = App.useApp();
   const { width } = useWindowDimensions();
   const username = localStorage.getItem("userNameBeerBuddy");
-  const [isNewUser, setIsNewUser] = useState("");
+  const [isNewUser, setIsNewUser] = useState<boolean | null>(null);
 
-  if (username) {
-    fetchLoginId(username, v4(), setIsNewUser, isNewUser);
-  }
+  /**
+   * Resolves a username to a user, storing the id it comes back with.
+   *
+   * The API creates the user when the username is new and returns the existing one
+   * otherwise, so signing in and signing up are the same call.
+   */
+  const signIn = useCallback(
+    async (name: string) => {
+      try {
+        const session = await createSession(name, v4());
+        localStorage.setItem("userIdBeerBuddy", session.id);
+        setIsNewUser(session.isNewUser);
+
+        setTimeout(() => window.location.replace("/"), 2000);
+      } catch (error) {
+        console.error("Could not sign in:", error);
+        message.error("Could not sign you in. Please try again.");
+      }
+    },
+    [message]
+  );
+
+  // Was previously called straight from the render body, which fired a network
+  // write during render — and twice per mount under React 19's StrictMode.
+  useEffect(() => {
+    if (username && !localStorage.getItem("userIdBeerBuddy")) signIn(username);
+  }, [username, signIn]);
 
   useEffect(() => {
-    if (isNewUser) {
-      message.success(
-        isNewUser === "no"
-          ? "Welcome back " + username + "!"
-          : "Created new user " + username + "!"
-      );
-    }
+    if (isNewUser === null) return;
+    message.success(
+      isNewUser ? `Created new user ${username}!` : `Welcome back ${username}!`
+    );
   }, [isNewUser, message, username]);
 
-  const saveUser = (string: { username: string }) => {
-    if (!localStorage.getItem("userIdBeerBuddy")) {
-      fetchLoginId(string.username, v4(), setIsNewUser, isNewUser);
-    }
-    localStorage.setItem("userNameBeerBuddy", string.username);
+  const saveUser = ({ username: name }: { username: string }) => {
+    localStorage.setItem("userNameBeerBuddy", name);
+    if (!localStorage.getItem("userIdBeerBuddy")) signIn(name);
   };
 
   if (width < 768) {

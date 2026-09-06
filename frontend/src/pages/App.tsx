@@ -14,7 +14,7 @@ const App = () => {
   useEffect(() => {
     protectRoute();
   }, []);
-  const { beers, fetchMore } = useFetchMoreBeers();
+  const { beers, totalCount, fetchMore } = useFetchMoreBeers();
 
   const mainRef = useRef<HTMLAnchorElement>(null);
 
@@ -23,12 +23,11 @@ const App = () => {
    * @param action The action to be executed when the "Escape" key is pressed.
    */
   const onEscape = (action: () => void) => {
-    window &&
-      window.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") {
-          action();
-        }
-      });
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        action();
+      }
+    });
   };
   onEscape(() => {
     mainRef.current?.focus();
@@ -84,7 +83,11 @@ const App = () => {
         >
           <UserIntro />
           <Actionbar fetchMore={fetchMore} />
-          <BeerList beers={beers} fetchMore={fetchMore} />
+          <BeerList
+            beers={beers}
+            totalCount={totalCount}
+            fetchMore={fetchMore}
+          />
           {showTopBtn && (
             <FloatButton
               onClick={scrollToTop}

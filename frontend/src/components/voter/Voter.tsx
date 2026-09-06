@@ -3,36 +3,15 @@ import { Button } from "antd";
 import styles from "./Voter.module.css";
 import { useState } from "react";
 import protectRoute from "../../utils/protectRoute";
+import { setReaction } from "../../api/client";
+import type { ReactionType } from "../../types/types";
 
-type ReactionType = "unreact" | "upvote" | "downvote";
 interface VoterInterface {
   votes: number;
   reaction: ReactionType;
   beerId: number;
   onSuccess?: () => void;
 }
-
-/**
- * Vote on a beer.
- * @param beerId - id of the beer to vote on.
- * @param reaction - the reaction to vote with.
- */
-const vote = async (beerId: number, reaction: ReactionType) => {
-  const userId = await localStorage.getItem("userIdBeerBuddy");
-
-  await fetch(import.meta.env.VITE_APP_BACKEND_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({
-      query: `{
-        react(userId: "${userId}" beerId: ${beerId}, action: "${reaction}")
-      }`,
-    }),
-  });
-};
 
 /**
  * UI component to perform the vote action.
@@ -50,7 +29,9 @@ const Voter = (props: VoterInterface) => {
       if (await protectRoute()) return "Error";
       const newReaction = action === reaction ? "unreact" : reaction;
       setAction(newReaction);
-      vote(props.beerId, newReaction);
+      setReaction(props.beerId, newReaction).catch((error) =>
+        console.error("Could not record vote:", error)
+      );
       if (props.onSuccess) props.onSuccess();
     };
 

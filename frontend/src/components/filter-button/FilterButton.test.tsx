@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import FilterButton from "./FilterButton";
 import { act } from "react-dom/test-utils";
@@ -35,7 +35,7 @@ describe("FilterButton", () => {
     expect(screen.queryByText("Filters")).toBeInTheDocument();
   });
 
-  it("should close modal", () => {
+  it("should close modal", async () => {
     render(<FilterButton fetchMore={fetchMore} />);
 
     expect(screen.queryByText("Filters")).not.toBeInTheDocument();
@@ -43,15 +43,15 @@ describe("FilterButton", () => {
     fireEvent.click(screen.getByRole("button"));
 
     const dialog = screen.getByRole("dialog");
-
-    /* Need to test the visibility of the wrapper of the modal,
-    since that is the element gaining the display: none on closing. */
-    const modalWrapper = dialog.parentElement;
-    expect(modalWrapper).toBeVisible();
+    expect(dialog.parentElement).toBeVisible();
 
     const closeButton = screen.getByRole("button", { name: /close/i });
-
     fireEvent.click(closeButton);
-    expect(modalWrapper).not.toBeVisible();
+
+    /* The wrapper only gets display:none once antd's leave animation finishes,
+       and jsdom never fires transitionend — so it stays visible forever here.
+       The observable signal that closing began is the dialog entering its leave
+       state. */
+    await waitFor(() => expect(dialog.className).toMatch(/ant-zoom-leave/));
   });
 });

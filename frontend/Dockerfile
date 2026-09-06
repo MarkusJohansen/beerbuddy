@@ -1,20 +1,17 @@
-# syntax=docker/dockerfile:1
+# Frontend image. Development only — the production bundle is built by the
+# repository-root Dockerfile and served by the backend, so a deployed BeerBuddy is
+# two containers rather than three and the SPA has one base path.
 
-FROM node:21.2.0-alpine
-
+FROM docker.io/oven/bun:1.4.2-slim AS base
 WORKDIR /app
 
-#RUN --mount=type=bind,source=package.json,target=package.json \
-#    --mount=type=bind,source=package-lock.json,target=package-lock.json \
-#    --mount=type=cache,target=/root/.npm \
-#    npm ci --omit=dev
+FROM base AS deps
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
-COPY package*.json ./
-
-RUN npm install
-
+FROM base AS dev
+ENV NODE_ENV=development
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
 EXPOSE 5173
-
-CMD npm run dev
+CMD ["bun", "run", "dev", "--host"]

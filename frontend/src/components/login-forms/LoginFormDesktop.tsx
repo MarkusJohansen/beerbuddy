@@ -1,5 +1,5 @@
 import styles from "./LoginFormDesktop.module.css";
-import { ValidateErrorEntity } from "rc-field-form/lib/interface";
+import type { ValidateErrorEntity } from "rc-field-form/lib/interface";
 import Logo from "../logo/Logo";
 import { Button, Card, Form, Input, theme } from "antd";
 

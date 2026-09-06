@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
 import MobileBeerAttribute from "./MobileBeerAttribute";
 import { axe } from "jest-axe";
-import { BeerAttributeProps } from "./BeerAttribute";
+import type { BeerAttributeProps } from "./BeerAttribute";
 
 const attributeProps: BeerAttributeProps[] = [
   {

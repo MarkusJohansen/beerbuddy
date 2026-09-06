@@ -4,38 +4,39 @@ exports[`Sidebar > renders correctly 1`] = `
 <div>
   <section
     aria-label="Sidebar"
-    class="_container_26077f"
+    class="_container_d1a476"
   >
     <div>
       <a
-        class="_wrapper_4f3c83"
-        href="/project2"
+        class="_wrapper_72d84d"
+        href="/"
       >
         <img
           alt="BeerBuddy logo"
-          class="_icon_4f3c83"
-          src="/project2/teku.svg"
+          class="_icon_72d84d"
+          src="/teku.svg"
         />
         <h1
-          class="_heading_4f3c83"
+          class="_heading_72d84d"
         >
           BeerBuddy
         </h1>
       </a>
       <section
-        aria-labelledby=":r4:"
+        aria-labelledby="_r_7_"
       >
         <div
-          class="ant-divider css-dev-only-do-not-override-pr0fja ant-divider-horizontal"
+          class="ant-divider css-dev-only-do-not-override-mncuj7 ant-divider-horizontal"
           role="separator"
         />
         <h2
-          id=":r4:"
+          id="_r_7_"
         >
           Filters
         </h2>
         <div
-          class="ant-collapse ant-collapse-icon-position-start _collapse_f3e15e css-dev-only-do-not-override-pr0fja"
+          aria-label="Beer styles"
+          class="ant-collapse ant-collapse-icon-position-start _collapse_1a0a67 css-dev-only-do-not-override-mncuj7"
         >
           <div
             class="ant-collapse-item"
@@ -75,10 +76,11 @@ exports[`Sidebar > renders correctly 1`] = `
                 class="ant-collapse-header-text"
               >
                 <span
-                  class="_collapseSpan_f3e15e"
+                  class="_collapseSpan_1a0a67"
                 >
                   Beer styles
                   <span
+                    aria-describedby="test-id"
                     aria-hidden="true"
                     aria-label="question-circle"
                     class="anticon anticon-question-circle"
@@ -107,7 +109,7 @@ exports[`Sidebar > renders correctly 1`] = `
           </div>
         </div>
         <div
-          class="ant-collapse ant-collapse-icon-position-start _collapse_f3e15e css-dev-only-do-not-override-pr0fja"
+          class="ant-collapse ant-collapse-icon-position-start _collapse_1a0a67 css-dev-only-do-not-override-mncuj7"
         >
           <div
             class="ant-collapse-item"
@@ -147,10 +149,11 @@ exports[`Sidebar > renders correctly 1`] = `
                 class="ant-collapse-header-text"
               >
                 <span
-                  class="_collapseSpan_f3e15e"
+                  class="_collapseSpan_1a0a67"
                 >
                   IBU
                   <span
+                    aria-describedby="test-id"
                     aria-hidden="true"
                     aria-label="question-circle"
                     class="anticon anticon-question-circle"
@@ -179,7 +182,7 @@ exports[`Sidebar > renders correctly 1`] = `
           </div>
         </div>
         <div
-          class="ant-collapse ant-collapse-icon-position-start _collapse_f3e15e css-dev-only-do-not-override-pr0fja"
+          class="ant-collapse ant-collapse-icon-position-start _collapse_1a0a67 css-dev-only-do-not-override-mncuj7"
         >
           <div
             class="ant-collapse-item"
@@ -219,10 +222,11 @@ exports[`Sidebar > renders correctly 1`] = `
                 class="ant-collapse-header-text"
               >
                 <span
-                  class="_collapseSpan_f3e15e"
+                  class="_collapseSpan_1a0a67"
                 >
                   ABV
                   <span
+                    aria-describedby="test-id"
                     aria-hidden="true"
                     aria-label="question-circle"
                     class="anticon anticon-question-circle"
@@ -251,7 +255,7 @@ exports[`Sidebar > renders correctly 1`] = `
           </div>
         </div>
         <button
-          class="ant-btn css-dev-only-do-not-override-pr0fja ant-btn-primary _buttons_f3e15e"
+          class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid _buttons_1a0a67"
           type="button"
         >
           <span>
@@ -259,7 +263,7 @@ exports[`Sidebar > renders correctly 1`] = `
           </span>
         </button>
         <button
-          class="ant-btn css-dev-only-do-not-override-pr0fja ant-btn-default _buttons_f3e15e"
+          class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-default ant-btn-color-default ant-btn-variant-outlined _buttons_1a0a67"
           type="button"
         >
           <span

@@ -3,29 +3,29 @@
 exports[`LoginFormMobile > matches snapshot 1`] = `
 <div>
   <main
-    class="_mobileContainer_b69d51"
+    class="_mobileContainer_2782d4"
   >
     <header
-      class="_logoSection_b69d51"
+      class="_logoSection_2782d4"
     >
       <a
-        class="_wrapper_4f3c83"
-        href="/project2"
+        class="_wrapper_72d84d"
+        href="/"
       >
         <img
           alt="BeerBuddy logo"
-          class="_icon_4f3c83"
-          src="/project2/teku.svg"
+          class="_icon_72d84d"
+          src="/teku.svg"
         />
         <h1
-          class="_heading_4f3c83"
+          class="_heading_72d84d"
         >
           BeerBuddy
         </h1>
       </a>
     </header>
     <div
-      class="ant-card ant-card-bordered _mobileCard_b69d51 css-dev-only-do-not-override-pr0fja"
+      class="ant-card ant-card-bordered _mobileCard_2782d4 css-dev-only-do-not-override-mncuj7"
       style="background-color: rgb(230, 244, 255);"
     >
       <div
@@ -35,23 +35,23 @@ exports[`LoginFormMobile > matches snapshot 1`] = `
           aria-label="Login form"
         >
           <h1
-            class="_loginFormHeaderMobile_b69d51"
+            class="_loginFormHeaderMobile_2782d4"
           >
             Log in
           </h1>
           <form
             autocomplete="off"
-            class="ant-form ant-form-vertical css-dev-only-do-not-override-pr0fja _loginFormMobile_b69d51"
+            class="ant-form ant-form-vertical css-dev-only-do-not-override-mncuj7 _loginFormMobile_2782d4"
             id="basic"
           >
             <div
-              class="ant-form-item _loginFormUsername_b69d51 css-dev-only-do-not-override-pr0fja"
+              class="ant-form-item _loginFormUsername_2782d4 css-dev-only-do-not-override-mncuj7 ant-form-item-vertical"
             >
               <div
-                class="ant-row ant-form-item-row css-dev-only-do-not-override-pr0fja"
+                class="ant-row ant-form-item-row css-dev-only-do-not-override-mncuj7"
               >
                 <div
-                  class="ant-col ant-form-item-label css-dev-only-do-not-override-pr0fja"
+                  class="ant-col ant-form-item-label css-dev-only-do-not-override-mncuj7"
                 >
                   <label
                     class="ant-form-item-required"
@@ -62,7 +62,7 @@ exports[`LoginFormMobile > matches snapshot 1`] = `
                   </label>
                 </div>
                 <div
-                  class="ant-col ant-form-item-control css-dev-only-do-not-override-pr0fja"
+                  class="ant-col ant-form-item-control css-dev-only-do-not-override-mncuj7"
                 >
                   <div
                     class="ant-form-item-control-input"
@@ -72,7 +72,7 @@ exports[`LoginFormMobile > matches snapshot 1`] = `
                     >
                       <input
                         aria-required="true"
-                        class="ant-input css-dev-only-do-not-override-pr0fja"
+                        class="ant-input css-dev-only-do-not-override-mncuj7 ant-input-outlined"
                         id="basic_username"
                         type="text"
                         value=""
@@ -83,13 +83,13 @@ exports[`LoginFormMobile > matches snapshot 1`] = `
               </div>
             </div>
             <div
-              class="ant-form-item css-dev-only-do-not-override-pr0fja"
+              class="ant-form-item css-dev-only-do-not-override-mncuj7 ant-form-item-vertical"
             >
               <div
-                class="ant-row ant-form-item-row css-dev-only-do-not-override-pr0fja"
+                class="ant-row ant-form-item-row css-dev-only-do-not-override-mncuj7"
               >
                 <div
-                  class="ant-col ant-form-item-control css-dev-only-do-not-override-pr0fja"
+                  class="ant-col ant-form-item-control css-dev-only-do-not-override-mncuj7"
                 >
                   <div
                     class="ant-form-item-control-input"
@@ -98,7 +98,7 @@ exports[`LoginFormMobile > matches snapshot 1`] = `
                       class="ant-form-item-control-input-content"
                     >
                       <button
-                        class="ant-btn css-dev-only-do-not-override-pr0fja ant-btn-primary _loginButton_b69d51"
+                        class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid _loginButton_2782d4"
                         type="submit"
                       >
                         <span>

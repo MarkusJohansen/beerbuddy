@@ -3,33 +3,33 @@
 exports[`CommentBar > should match snapshot 1`] = `
 <div>
   <div
-    class="_wrapper_18a6db"
+    class="_wrapper_b20f29"
   >
     <div
-      class="_divider_18a6db"
+      class="_divider_b20f29"
     />
     <section
       aria-label="Post a comment"
-      class="_container_18a6db"
+      class="_container_b20f29"
     >
       <div
-        class="_labelContainer_18a6db"
+        class="_labelContainer_b20f29"
       >
         <label
-          for=":r0:"
+          for="_r_0_"
         >
           Comment
         </label>
         <input
-          class="ant-input css-dev-only-do-not-override-pr0fja _inputField_18a6db"
-          id=":r0:"
+          class="ant-input css-dev-only-do-not-override-mncuj7 ant-input-outlined _inputField_b20f29"
+          id="_r_0_"
           placeholder="Best beer ever!"
           type="text"
           value=""
         />
       </div>
       <button
-        class="ant-btn css-dev-only-do-not-override-pr0fja ant-btn-primary _submitButton_18a6db"
+        class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid _submitButton_b20f29"
         type="button"
       >
         <span>

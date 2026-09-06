@@ -1,5 +1,5 @@
 import styles from "./BeerAttribute.module.css";
-import { BeerAttributeProps } from "./BeerAttribute";
+import type { BeerAttributeProps } from "./BeerAttribute";
 
 interface MobileBeerAttributeProps {
   attributeProps: BeerAttributeProps[];

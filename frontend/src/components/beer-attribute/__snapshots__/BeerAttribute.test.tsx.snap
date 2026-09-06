@@ -4,25 +4,24 @@ exports[`BeerAttribute > renders correctly 1`] = `
 <div>
   <div
     aria-label="Test"
-    class="_attributeContainer_eeaf5b"
+    class="_attributeContainer_fae872"
   >
     <div
-      class="_attributeHeaderContainer_eeaf5b"
+      class="_attributeHeaderContainer_fae872"
     >
       <img
         alt="Alternative text"
         height="32px"
-        src=""
         width="20px"
       />
       <h3
-        class="_attributeHeading_eeaf5b"
+        class="_attributeHeading_fae872"
       >
         Test
       </h3>
     </div>
     <p
-      class="_attributeText_eeaf5b"
+      class="_attributeText_fae872"
     >
       5
     </p>

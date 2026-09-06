@@ -1,5 +1,5 @@
 import styles from "./Logo.module.css";
-import { CSSProperties } from "react";
+import type { CSSProperties } from "react";
 
 /**
  * Logo component that contains the BeerBuddy logo

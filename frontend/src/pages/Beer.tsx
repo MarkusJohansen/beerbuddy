@@ -12,47 +12,8 @@ import protectRoute from "../utils/protectRoute";
 import useWindowDimensions from "../utils/useWindowDimensions";
 import MobileBeerAttribute from "../components/beer-attribute/MobileBeerAttribute";
 import Voter from "../components/voter/Voter";
-
-type CommentInterface = {
-  id: number;
-  user_id: string;
-  username: string;
-  comment_text: string;
-  created_at: string;
-};
-
-/**
- * Fetches comments from the backend.
- * @param id - The ID of the beer to fetch comments for.
- * @param offset - The offset to start fetching comments from.
- * @returns - An array of comments.
- */
-const fetchComments = async (id: string, offset: number) => {
-  const query = {
-    query: `{ comments(id: ${id}, size: 5, start: ${offset}) }`,
-  };
-
-  return await fetch(import.meta.env.VITE_APP_BACKEND_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify(query),
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      return response.json();
-    })
-    .then((data) => {
-      return data.data.comments;
-    })
-    .catch((error) => {
-      console.error("There was a problem with the fetch operation:", error);
-    });
-};
+import { fetchComments } from "../api/client";
+import type { Comment } from "../types/types";
 
 /**
  * BeerPage component that displays detailed information about a beer and its comments.
@@ -70,7 +31,7 @@ const BeerPage = () => {
   const { width } = useWindowDimensions();
 
   const limit = 5;
-  const [comments, setComments] = useState<CommentInterface[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
 
   useEffect(() => {
     /* If there is no ID, then we must do an early return */
@@ -78,9 +39,11 @@ const BeerPage = () => {
 
     setCommentsLoading(true);
     setOffset(0);
-    fetchComments(id, 0)
-      .then((data) => {
-        setComments(data !== undefined ? data : []);
+    fetchComments(Number(id), limit, 0)
+      .then(setComments)
+      .catch((error) => {
+        console.error("Could not load comments:", error);
+        setComments([]);
       })
       .finally(() => {
         setCommentsLoading(false);
@@ -209,10 +172,12 @@ const BeerPage = () => {
         dataLength={comments.length}
         next={() => {
           /* Fetch the next comments we need, and add them to the comments state */
-          fetchComments(id, offset + limit).then((data) => {
-            setComments([...comments, ...data]);
-            setOffset(offset + limit);
-          });
+          fetchComments(Number(id), limit, offset + limit)
+            .then((data) => {
+              setComments([...comments, ...data]);
+              setOffset(offset + limit);
+            })
+            .catch((error) => console.error("Could not load comments:", error));
         }}
         hasMore={comments.length < beer.comment_count}
         loader={
