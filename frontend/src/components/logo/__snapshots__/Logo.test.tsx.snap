@@ -3,16 +3,16 @@
 exports[`Logo > renders correctly 1`] = `
 <div>
   <a
-    class="_wrapper_72d84d"
+    class="flex items-center gap-sm no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     href="/"
   >
     <img
       alt="BeerBuddy logo"
-      class="_icon_72d84d"
+      class="size-lg"
       src="/teku.svg"
     />
     <h1
-      class="_heading_72d84d"
+      class="m-0 font-display text-lg tracking-[-0.02em] text-ink"
     >
       BeerBuddy
     </h1>

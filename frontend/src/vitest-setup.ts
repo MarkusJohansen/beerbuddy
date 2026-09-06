@@ -11,7 +11,7 @@ import { toHaveNoViolations } from "jest-axe";
 // gone. Its matcher type is declared in vitest.d.ts.
 expect.extend(toHaveNoViolations);
 
-// jsdom does not implement matchMedia, which antd's responsive components call.
+// jsdom does not implement matchMedia, which the responsive hooks call.
 // https://jestjs.io/docs/manual-mocks#mocking-methods-which-are-not-implemented-in-jsdom
 Object.defineProperty(window, "matchMedia", {
   writable: true,
@@ -26,3 +26,28 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: vi.fn(),
   })),
 });
+
+// jsdom does not implement ResizeObserver, which Radix's slider uses to track
+// its track width. Without it every component that renders the filter panel
+// throws before it reaches an assertion.
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+window.ResizeObserver ??= ResizeObserverStub;
+
+// jsdom parses <dialog> but implements none of its behaviour, so `showModal()`
+// is undefined and the filter dialog cannot open under test. These stubs give
+// the element its open/close semantics; the focus trap and inert background are
+// the browser's and are not exercised here.
+if (!HTMLDialogElement.prototype.showModal) {
+  HTMLDialogElement.prototype.showModal = function showModal() {
+    this.open = true;
+  };
+  HTMLDialogElement.prototype.close = function close(returnValue?: string) {
+    this.open = false;
+    if (returnValue !== undefined) this.returnValue = returnValue;
+    this.dispatchEvent(new Event("close"));
+  };
+}

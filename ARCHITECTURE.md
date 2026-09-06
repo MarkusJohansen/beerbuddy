@@ -298,14 +298,24 @@ returns it deliberately, and it is never rendered as an option of its own. `"Oth
 is itself a real style name in the dataset as well as the label, so selecting it
 matches both the literal style and the complement — as it did before.
 
-**Responsiveness is JavaScript**, via `useWindowDimensions()`, branching at 768 and
-1000 px. Those breakpoints are magic numbers duplicated across files; a seventh copy
-is the moment to extract a constant.
+**Responsiveness is JavaScript**, via `useWindowDimensions()` compared against
+`MOBILE` and `TABLET` in `src/utils/breakpoints.ts`. Those were literals in seven
+components until the seventh copy triggered the extraction the spec called for. The
+same two numbers are declared again as Tailwind screens in `tokens.css`, because a
+`@media` condition cannot read a custom property; both files say so.
 
-**Two component libraries.** Ant Design throughout, and MUI for exactly one
-component — the ABV and IBU sliders. Ant Design's `Slider` failed the accessibility
-audit. See [`docs/accessibility.md`](docs/accessibility.md#material-ui-components)
-before deleting what looks like obvious bloat.
+**No component library.** Tailwind supplies the utilities, bound to
+`src/styles/tokens.css`. Four shadcn/ui components are *vendored as source* into
+`src/components/ui/` and edited in place — the corner radius, the rule weight and the
+palette are code in this repository, not overrides fighting a library's internals.
+Six further controls are native elements: `<details>`, `<dialog>`, `<select>`,
+`<input type="checkbox">`, `<label>` and `<hr>`.
+
+**One package for one component.** `radix-ui` is present for the ABV and IBU sliders
+and nothing else: they are two-thumb ranges and `<input type="range">` has one thumb.
+This is the same reason MUI was carried before it. See
+[`docs/accessibility.md`](docs/accessibility.md) before deleting what looks like
+obvious bloat.
 
 ## 9. Accessibility as architecture
 
@@ -325,7 +335,7 @@ an axe assertion fails, read it — that one is behavioural.
 
 | Suite            | Command              | What it covers                        |
 | ---------------- | -------------------- | ------------------------------------- |
-| Frontend unit    | `make test-frontend` | 85 tests: render, snapshot, axe       |
+| Frontend unit    | `make test-frontend` | 146 tests: render, snapshot, axe, tokens |
 | Backend contract | `make test-backend`  | 30 tests: routes, injection, cache    |
 | End-to-end       | `make test-e2e`      | Playwright against a disposable stack |
 
@@ -383,7 +393,8 @@ Things nothing enforces, that will fail quietly.
    argument. The only text assembled into a statement is an `ORDER BY` fragment from
    a frozen map.
 3. **Route declarations stay chained** in `app.ts`, or they vanish from `AppType`.
-4. **MUI stays** for the ABV/IBU sliders. Section 8.
+4. **The range sliders keep a real two-thumb control.** Section 8; the replacement
+   is demonstrated in `slider.test.tsx`, not assumed.
 5. **Dependency count is graded.** See [`docs/sustainability.md`](docs/sustainability.md).
    If something needs a new package, say what it replaces.
 6. **The frontend build needs the backend's source and node_modules.** Section 2.
@@ -442,12 +453,36 @@ TypeScript 7 (the native port) is current, but `typescript-eslint@8` declares
 `typescript: >=4.8.4 <6.1.0`. Type-aware linting is a CI gate, so the linter sets the
 ceiling. TS 7 is a follow-up once the peer range moves.
 
-### antd stays on 5
+### Ant Design and MUI replaced by Tailwind and vendored shadcn/ui
 
-antd 6 shipped and supports React 19 natively, but it is a breaking major and
-component code was out of scope for this change. antd 5.29 works under React 19 here
-because every `message` call goes through `App.useApp()` rather than the static API
-that React 19 breaks — so no compatibility patch package is needed.
+The design the interface is now built to — Swiss skeleton, sharp corners, hairline
+rules instead of fills, no gradients or shadows, one accent that only carries meaning,
+typography rather than layout carrying the identity — sits on the opposite side of Ant
+Design's defaults on every point. Not in its tokens, which are configurable, but in
+its component internals, which are reached only through `.ant-*` overrides that the
+spec already called a last resort. A library whose last resort is the main tool is the
+wrong library.
+
+**Rejected: keep Ant Design and redesign through `ConfigProvider` tokens.** Cheaper,
+and it was the first plan. It fails on corner radius, elevation and rule treatment
+together, and each fix is an override rather than a setting.
+
+**Rejected: a default `shadcn add` for the thirteen components in use.** That installs
+roughly ten `@radix-ui/*` packages and takes the repo from 41 direct dependencies to
+about 53, above the 55 the modernisation had brought it down from. Six of those
+components have native equivalents that are accessible by default and unornamented by
+default — the second of which is what this design wants — so they are used instead.
+Runtime dependencies fell from 14 to 12 and the total held at 41.
+
+The bundle fell from **1,019 kB to 325 kB** (320 kB to 106 kB gzipped), which retires
+the single-chunk figure the README used to quote, though not the absence of code
+splitting.
+
+Two costs, stated rather than buried. The open `<select>` popup is the operating
+system's and cannot be styled — accepted in exchange for deleting the mobile Dropdown
+variant and its responsive branch. And `src/components/ui/` is now code this repository
+maintains: a later `shadcn add` drops files written in upstream's idiom, against tokens
+that do not exist here.
 
 ### The classic hook lint rules, not v7's
 
@@ -468,7 +503,8 @@ Real limitations, stated rather than hidden.
   pages. Fine for 2,410 rows.
 - **The cache purges wholesale on any write.** A single vote empties it. Acceptable at
   this size; measure before adding tags.
-- **The bundle is one 1,019 kB chunk** (320 kB gzipped). No code splitting.
+- **The bundle is one 325 kB chunk** (106 kB gzipped). No code splitting; it was
+  1,019 kB before Ant Design was removed.
 - **Backend hot reload does not work in-container on macOS.** Section 11.
 - **Five beers have no style** and are only reachable through the "Other" filter.
 - **`vote_type = 'unreact'`** is stored as a row rather than the row being deleted, so
@@ -481,8 +517,12 @@ Real limitations, stated rather than hidden.
 - **A state management library.** Four screens.
 - **An ORM.** Raw SQL, because the catalogue query needs it.
 - **A codegen step.** Types cross the wire by inference.
-- **A CSS framework.** CSS Modules per component; colours from the antd theme tokens
-  in `main.tsx`.
+- **A component library.** Tailwind plus four vendored shadcn/ui files and six native
+  elements. Nothing to theme around.
+- **A CSS-in-JS runtime.** Removing MUI removed both emotion packages with it.
+- **`class-variance-authority`.** Four button variants do not need a variant engine.
+- **A toast library.** An `aria-live` region is the part that does the accessible work.
+- **stylelint.** `no-hardcoded-colours.test.ts` is fifteen lines and already in CI.
 - **A deployment target.** Section 11.
 
 ## 16. Where a change attaches

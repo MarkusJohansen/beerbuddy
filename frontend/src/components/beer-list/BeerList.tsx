@@ -1,8 +1,6 @@
 import InfiniteScroll from "react-infinite-scroll-component";
+import { useContext, useEffect, useRef } from "react";
 import BeerCard from "../beer-card/BeerCard";
-import styles from "./BeerList.module.css";
-import { useEffect, useRef } from "react";
-import { useContext } from "react";
 import { FilterContext } from "../../context/FilterContext";
 
 import type { BeerListItem } from "../../types/types";
@@ -56,17 +54,25 @@ const BeerList = ({ beers, totalCount, fetchMore }: BeerListProps) => {
   }, [searchString, sorting]);
 
   return (
-    <>
+    <div className="flex flex-col gap-md">
       <section
-        className={styles.resultsInfoContainer}
         aria-label="Search and sorting information"
+        className="flex flex-wrap items-baseline gap-md border-b border-rule pb-sm"
       >
-        <div className={styles.resultsHeader}>
-          <h2 className={styles.resultsInfo}>{totalCount} results</h2>
-        </div>
-        <p className={styles.resultsInfo}>Searched for: "{searchString}"</p>
-        <p className={styles.resultsInfo}>
-          Sorted by: {translateSorting(sorting)}
+        {/* The count is the page's second numeral, after the scores. */}
+        <h2 className="tnum m-0 font-display text-xl text-ink">
+          {totalCount}
+          <span className="pl-sm text-xs tracking-[0.1em] text-ink-mute uppercase">
+            results
+          </span>
+        </h2>
+        {searchString && (
+          <p className="m-0 text-xs text-ink-mute">
+            Searched for &ldquo;{searchString}&rdquo;
+          </p>
+        )}
+        <p className="m-0 text-xs text-ink-mute">
+          Sorted by {translateSorting(sorting)}
         </p>
       </section>
       <section aria-label="Beer list">
@@ -75,19 +81,19 @@ const BeerList = ({ beers, totalCount, fetchMore }: BeerListProps) => {
           next={fetchMoreRef.current}
           hasMore={beers.length < totalCount}
           loader={
-            <p style={{ textAlign: "center" }}>
-              <b>Loading...</b>
+            <p className="py-md text-center text-xs text-ink-mute">
+              Loading...
             </p>
           }
           endMessage={
-            <p style={{ textAlign: "center" }}>
-              <b>Yay! You have seen it all</b>
+            <p className="py-md text-center text-xs text-ink-mute">
+              That is all {totalCount} of them.
             </p>
           }
           scrollThreshold={0.99}
           scrollableTarget="infiniteScrollTarget"
         >
-          <ul className={styles.list}>
+          <ul className="m-0 list-none p-0">
             {beers?.map((beer) => (
               <li key={beer.beer_id}>
                 <BeerCard
@@ -102,7 +108,7 @@ const BeerList = ({ beers, totalCount, fetchMore }: BeerListProps) => {
           </ul>
         </InfiniteScroll>
       </section>
-    </>
+    </div>
   );
 };
 export default BeerList;

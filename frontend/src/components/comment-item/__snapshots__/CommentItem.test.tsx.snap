@@ -3,48 +3,64 @@
 exports[`CommentItem > matches snapshot 1`] = `
 <div>
   <div
-    class="_commentContainer_c1ec95"
+    class="flex items-start justify-between gap-md border-b border-rule py-md"
   >
     <div
-      class="_commentContentContainer_c1ec95"
+      class="flex flex-col gap-xs"
     >
-      <div>
-        <div
-          class="_commentHeader_c1ec95"
+      <div
+        class="flex items-baseline gap-sm"
+      >
+        <p
+          class="m-0 text-base text-ink"
         >
-          <p
-            class="_commentAuthor_c1ec95"
-          >
-            Martin Hansa-Borg
-          </p>
-          <p
-            class="_dot_c1ec95"
-          >
-            •
-          </p>
-          <p
-            class="_commentDate_c1ec95"
-          >
-            5 days ago
-          </p>
-        </div>
+          Martin Hansa-Borg
+        </p>
+        <p
+          class="m-0 text-xs text-ink-mute"
+        >
+          5 days ago
+        </p>
       </div>
       <p
-        class="_commentText_c1ec95"
+        class="m-0 text-base text-ink-dim"
       >
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla cursus sem diam, eget consectetur quam interdum eu. Aliquam ornare lectus vel sapien blandit eleifend. Aenean ac vestibulum metus. Nam auctor sed dui dapibus pharetra.
       </p>
     </div>
     <button
       aria-label="Delete comment"
-      class="_buttonContainer_c1ec95"
+      class="shrink-0 cursor-pointer border-0 bg-transparent p-0 text-ink-mute transition-colors hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
-      <img
-        alt="Trash icon"
-        height="32px"
-        src="/delete-kopi.svg"
-        width="32px"
-      />
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-trash size-md"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M10 11v6"
+        />
+        <path
+          d="M14 11v6"
+        />
+        <path
+          d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+        />
+        <path
+          d="M3 6h18"
+        />
+        <path
+          d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+        />
+      </svg>
     </button>
   </div>
 </div>

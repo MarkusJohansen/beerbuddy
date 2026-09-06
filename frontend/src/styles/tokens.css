@@ -1,0 +1,180 @@
+@import "tailwindcss";
+
+/*
+ * Self-hosted rather than linked from a font CDN: no third-party request on the
+ * critical path and the app still renders offline, at the cost of committing two
+ * subset files. Latin-only variable builds — 67 kB and 48 kB.
+ *
+ * Fraunces is the identity. Inter carries the data, and `tnum` is not optional
+ * there: votes, ABV and IBU are read as columns and proportional digits make
+ * them ragged.
+ */
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/fraunces-latin.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter-latin.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/*
+ * The only file in the frontend permitted to contain a colour literal.
+ * `no-hardcoded-colours.test.ts` enforces that; if you are about to write a hex
+ * anywhere else, the value belongs here instead.
+ *
+ * Every scale below opens with a `--<namespace>-*: initial` reset. That is what
+ * makes these scales *the* scales rather than additions to Tailwind's defaults:
+ * after the reset, `p-[7px]` and `text-sm` do not exist, so a component cannot
+ * quietly invent a step. Values are from the design brief
+ * (~/second-brain, "My 2026 UX design thoughts" § My design language).
+ */
+@theme {
+  /* --- colour ------------------------------------------------------------
+   * One accent, and it only ever carries meaning: a link, an active filter,
+   * the user's own vote. Everything else is ground and ink. Strip every
+   * accent rule and the hierarchy must still read — that is the acceptance
+   * test, not a figure of speech.
+   */
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-inherit: inherit;
+
+  --color-ground: #faf9f5; /* warm paper, not #fff */
+  --color-ink: #141413; /* warm near-black, not #000 */
+  --color-ink-dim: #57534e; /* secondary prose */
+  --color-ink-mute: #6b6459; /* labels, metadata */
+  --color-rule: #e5e1d8; /* hairlines — decorative, never a fill */
+  --color-rule-strong: #8a8072; /* the boundary of a control that has only a border */
+
+  /* Burnt amber, derived rather than picked: `tokens.test.ts` walks the
+   * original #FFCC48 down in lightness until it clears 4.5:1 on the ground,
+   * and this is where it lands. Saturated yellow cannot pass AA on cream —
+   * the brief's own terracotta (2.96:1) and rust (4.01:1) do not either. */
+  --color-accent: #b25900;
+
+  /* --- type --------------------------------------------------------------
+   * Ratio ~1.333. Type carries the identity here, not the layout, so this is
+   * the one place the design spends.
+   */
+  --text-*: initial;
+  --text-xs: 13px;
+  --text-xs--line-height: 1.5;
+  --text-base: 17px;
+  --text-base--line-height: 1.6;
+  --text-lg: 23px;
+  --text-lg--line-height: 1.35;
+  --text-xl: 30px;
+  --text-xl--line-height: 1.2;
+  --text-2xl: 40px;
+  --text-2xl--line-height: 1.1;
+  --text-3xl: 64px;
+  --text-3xl--line-height: 1.05;
+
+  --font-*: initial;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* --- spacing -----------------------------------------------------------
+   * 4 / 8 / 16 / 24 / 32 / 48 / 64 and nothing between them. Named rather
+   * than numbered because `p-md` reads and `p-3` (= 16px) does not.
+   */
+  --spacing: initial;
+  --spacing-*: initial;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+
+  /* --- surfaces ----------------------------------------------------------
+   * Sharp corners are the default and rounding is not on offer. Regions are
+   * separated by hairline rules and whitespace; there is no shadow scale
+   * because there are no shadows.
+   */
+  --radius-*: initial;
+  --radius-none: 0px;
+
+  /* --- responsive --------------------------------------------------------
+   * Kept in step with `src/utils/breakpoints.ts` by hand — a `@media`
+   * condition cannot read a custom property, so this is the one duplication
+   * the design accepts rather than hides.
+   */
+  --breakpoint-*: initial;
+  --breakpoint-mobile: 768px;
+  --breakpoint-tablet: 1000px;
+
+  --ease-*: initial;
+  --ease-quick: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* So a bare `transition-colors` already has the right timing and nothing has
+   * to restate it. There is very little motion here to tune. */
+  --default-transition-duration: 120ms;
+  --default-transition-timing-function: var(--ease-quick);
+}
+
+/*
+ * Durations are plain properties rather than a `@theme` namespace: they are
+ * used by a handful of transitions, and Tailwind has no duration namespace to
+ * hang them on.
+ */
+:root {
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+}
+
+/*
+ * Motion exists only to make a state change legible. This aesthetic has no
+ * shadows to lift and no ornament to animate, so there is very little of it,
+ * and none of it is load-bearing.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0.01ms;
+    --duration-base: 0.01ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    color: var(--color-ink);
+    background-color: var(--color-ground);
+  }
+
+  body {
+    margin: 0;
+  }
+
+  /* Optical sizing is the whole point of Fraunces; let the browser drive it. */
+  .font-display,
+  h1,
+  h2,
+  h3 {
+    font-optical-sizing: auto;
+  }
+
+  /* Tabular figures wherever numbers are compared down a column. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}

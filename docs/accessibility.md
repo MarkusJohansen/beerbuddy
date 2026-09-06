@@ -13,8 +13,8 @@ This document describes the accessibility measures that were taken to make the a
   - [Tooltips](#tooltips)
   - [User feedback on actions](#user-feedback-on-actions)
   - [Labelling of interactive elements](#labelling-of-interactive-elements)
-  - [Ant-design components](#ant-design-components)
-  - [Material UI components](#material-ui-components)
+  - [Component sources](#component-sources)
+  - [The range sliders](#the-range-sliders)
   - [Responsive design](#responsive-design)
 - [Screen reader support](#screen-reader-support)
   - [Keyboard navigation](#keyboard-navigation)
@@ -37,7 +37,36 @@ The design of the application was made with accessibility in mind, to make it as
 
 ### Color scheme
 
-The color scheme of the application was chosen to be as accessible as possible. The colors were chosen to have a high contrast, and to be distinguishable from each other. We wanted to use a color scheme that was not too bright, to make it easier to use the application in a dark environment, which is why we use a dark theme with yellow highlights for the application. The yellow colors catches the eye, and is used for action buttons and other elements that the user should be able to find easily. The dark theme is also easier on the eyes, and makes it easier to focus on the content of the application.
+The palette is a warm-paper ground with warm near-black ink and exactly one accent.
+Every pair below is asserted by `frontend/src/styles/tokens.test.ts`, which fails the
+build if a value drifts under its floor — the figures here are read out of that test
+rather than measured by hand.
+
+| Pair | Ratio | Floor | Used for |
+| --- | --- | --- | --- |
+| `ink` `#141413` on `ground` `#FAF9F5` | 17.50:1 | 4.5 | body prose |
+| `ink-dim` `#57534E` on `ground` | 7.24:1 | 4.5 | secondary prose |
+| `ink-mute` `#6B6459` on `ground` | 5.55:1 | 4.5 | labels, metadata |
+| `accent` `#B25900` on `ground` | 4.61:1 | 4.5 | links, active states, focus ring |
+| `ground` on `accent` | 4.61:1 | 4.5 | text reversed out of an accent fill |
+| `rule-strong` `#8A8072` on `ground` | 3.68:1 | 3.0 | the border of a control with no fill |
+| `rule` `#E5E1D8` on `ground` | 1.24:1 | — | hairline separators |
+
+`rule` is deliberately below every floor and the test asserts that it stays there. A
+hairline between list entries is decoration, not a control boundary, and WCAG requires
+no contrast for it; `rule-strong` exists for the case that does. Asserting the weak one
+is weak stops it being "fixed" into a visible grey line later.
+
+**The accent was derived, not chosen.** The previous theme's `#FFCC48` measures 1.43:1
+on this ground — saturated yellow cannot pass AA on cream at any usable lightness, and
+neither can the two accents in the maintainer's design notes (terracotta `#D97757` at
+2.96:1, rust `#C15F3C` at 4.01:1). The test walks that amber down in lightness at its
+own hue until it clears 4.5:1, and `#B25900` is where it lands: a burnt amber, still
+recognisably descended from the original.
+
+Colour is never the only carrier. There is one accent by design, so error states are
+distinguished by weight, position and an icon rather than by a second hue — which is
+also what a red-green colour-blind reader needs.
 
 ### Font
 
@@ -67,19 +96,42 @@ The application gives the user feedback when they perform an action through ant-
 
 Interactive elements in the application are clearly labelled. This makes it easier to understand what the different elements do, and it makes it easier to use the application. Select buttons and textfield are examples of labeled components.
 
-### Ant-design components
+### Component sources
 
-The application uses ant-design components for most of the interactive elements. These components are designed to be accessible, and is a commonly used library for user-friendly components.
+Most interactive elements are native: `<details>` for the collapsible filter groups,
+`<dialog>` for the filter modal, `<select>` for sorting, `<input type="checkbox">` for
+the style filters, `<label>` and `<hr>`. They are accessible by default, which is a
+larger part of why the axe assertions pass than any library was.
 
-### Material UI components
+The remaining components are shadcn/ui source vendored into
+`frontend/src/components/ui/` and edited there — so an accessibility fix is a change
+to code in this repository rather than a wait for an upstream release.
 
-When we used Ant Design components, we found that the Slider component was not very accessible. This was highlighted by Firefox Accessibility, WAVE and aXe. We therefore switched this component out for the Slider-component from MUI.
+Two jsdom gaps are stubbed in `frontend/src/vitest-setup.ts`: it implements neither
+`HTMLDialogElement.showModal()` nor `ResizeObserver`, and without those every test
+that renders the filter panel throws before it reaches an axe assertion. The focus
+trap and inert background that `<dialog>` provides are the browser's and are not
+exercised by the unit suite.
 
-**MUI is carried for this one component and nothing else.** It looks like an obvious
-second component library to delete, and deleting it reintroduces the audit failure.
-If you want it gone, the burden is a replacement — a native `<input type="range">`
-pair, or an Ant Design slider on a version that has fixed the issue — that passes
-the axe assertions in `Filters`, demonstrated before the dependency is removed.
+### The range sliders
+
+The ABV and IBU filters are two-thumb ranges, and `<input type="range">` has one
+thumb. That is the whole reason a component package is present at all.
+
+Originally this was MUI's `Slider`, adopted because Ant Design's failed the audit
+under Firefox Accessibility, WAVE and aXe. Ant Design is gone, so the comparison it
+existed to lose is gone with it, and the control is now Radix's through shadcn/ui —
+which drops MUI and both emotion packages.
+
+**The obligation transferred rather than lapsed.** `components/ui/slider.test.tsx`
+asserts that each thumb is individually focusable and moves without the other, that
+each announces its value and its bounds, that arrow keys, Home and End work, and that
+the rendered control passes axe. Radix binds Home and End to the range's own ends
+rather than to the focused thumb; that is documented in the test.
+
+If you want `radix-ui` gone, the fallback is a labelled pair of native
+`<input type="range">` controls for min and max — genuinely accessible, and worse to
+use. Demonstrate it against those assertions before removing the dependency.
 
 ### Responsive design
 

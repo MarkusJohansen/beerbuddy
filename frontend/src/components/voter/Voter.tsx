@@ -1,7 +1,6 @@
-import { CaretDownFilled, CaretUpFilled } from "@ant-design/icons";
-import { Button } from "antd";
-import styles from "./Voter.module.css";
 import { useState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "../ui/button";
 import protectRoute from "../../utils/protectRoute";
 import { setReaction } from "../../api/client";
 import type { ReactionType } from "../../types/types";
@@ -13,14 +12,27 @@ interface VoterInterface {
   onSuccess?: () => void;
 }
 
+/** Each reaction's contribution to the score, so a change can be applied locally. */
+const VALUES: Record<ReactionType, number> = {
+  upvote: 2,
+  unreact: 1,
+  downvote: 0,
+};
+
 /**
  * UI component to perform the vote action.
+ *
+ * The score is the expressive element of the catalogue — a ranked list is a list
+ * of numbers — so it is set large in tabular figures and the chevrons stay
+ * quiet. The accent marks the user's own vote and nothing else here.
  * @param votes - number of votes
  * @param reaction - the reaction to vote with
  * @param beerId - id of the beer to vote on
  * @returns - the voter component
  */
 const Voter = (props: VoterInterface) => {
+  const [action, setAction] = useState(props.reaction);
+
   const handleVote =
     (reaction: ReactionType) =>
     async (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -35,48 +47,37 @@ const Voter = (props: VoterInterface) => {
       if (props.onSuccess) props.onSuccess();
     };
 
-  const [action, setAction] = useState(props.reaction);
-
-  /**
-   * Give values to the different reactions.
-   * This is used to calculate the total number of votes.
-   */
-  const values = {
-    upvote: 2,
-    unreact: 1,
-    downvote: 0,
-  };
-
   const total =
-    parseInt(`${props.votes}`) + values[action] - values[props.reaction];
-
-  const highlightColor = "#ffbc0d";
+    parseInt(`${props.votes}`) + VALUES[action] - VALUES[props.reaction];
 
   return (
-    <div className={styles.wrapper}>
+    <div className="flex shrink-0 items-center gap-sm">
       <Button
-        type="primary"
-        icon={<CaretUpFilled />}
+        variant="ghost"
+        size="icon"
         onClick={handleVote("upvote")}
         aria-label="Upvote this beer"
-        style={{
-          backgroundColor: action === "upvote" ? highlightColor : "",
-          filter: action === "upvote" ? "" : "brightness(0.8)",
-        }}
-      />
-      <h2 className={styles.count} aria-label="Total score">
+        aria-pressed={action === "upvote"}
+        className={action === "upvote" ? "text-accent" : undefined}
+      >
+        <ChevronUp aria-hidden className="size-md" />
+      </Button>
+      <span
+        aria-label="Total score"
+        className="tnum min-w-xl text-center font-display text-lg text-ink"
+      >
         {!isNaN(total) ? total : 0}
-      </h2>
+      </span>
       <Button
-        type="primary"
-        icon={<CaretDownFilled />}
+        variant="ghost"
+        size="icon"
         onClick={handleVote("downvote")}
         aria-label="Downvote this beer"
-        style={{
-          backgroundColor: action === "downvote" ? highlightColor : "",
-          filter: action === "downvote" ? "" : "brightness(0.8)",
-        }}
-      />
+        aria-pressed={action === "downvote"}
+        className={action === "downvote" ? "text-accent" : undefined}
+      >
+        <ChevronDown aria-hidden className="size-md" />
+      </Button>
     </div>
   );
 };

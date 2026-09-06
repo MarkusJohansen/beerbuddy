@@ -1,4 +1,3 @@
-import styles from "./Logo.module.css";
 import type { CSSProperties } from "react";
 
 /**
@@ -9,9 +8,15 @@ import type { CSSProperties } from "react";
  */
 const Logo = (props: { style?: CSSProperties | undefined }) => {
   return (
-    <a style={props.style} className={styles.wrapper} href="/">
-      <img src="/teku.svg" className={styles.icon} alt="BeerBuddy logo" />
-      <h1 className={styles.heading}>BeerBuddy</h1>
+    <a
+      style={props.style}
+      href="/"
+      className="flex items-center gap-sm no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+    >
+      <img src="/teku.svg" className="size-lg" alt="BeerBuddy logo" />
+      <h1 className="m-0 font-display text-lg tracking-[-0.02em] text-ink">
+        BeerBuddy
+      </h1>
     </a>
   );
 };

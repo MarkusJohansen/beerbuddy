@@ -17,17 +17,12 @@ const mockError = vi.fn();
 const mockSuccess = vi.fn();
 
 /**
- * Mock the App context to return a mock message object, with success and error functions.
+ * Replace the toast hook rather than the provider: the component only needs the
+ * two announcer functions, and this keeps the assertions on what it announced.
  */
-vi.mock("antd", async () => {
-  const actual: object = await vi.importActual("antd");
-  return {
-    ...actual,
-    App: {
-      useApp: () => ({ message: { error: mockError, success: mockSuccess } }),
-    },
-  };
-});
+vi.mock("../ui/use-toast", () => ({
+  useToast: () => ({ error: mockError, success: mockSuccess }),
+}));
 
 /**
  * Mock useParams to return a mock ID.
@@ -124,14 +119,14 @@ describe("CommentBar", () => {
   });
 
   it("Should Throw error on empty comment", async () => {
-    const { getByPlaceholderText, getAllByText, queryByRole, queryAllByText } =
-      render(<CommentBar onSuccess={() => {}} />);
+    const { getByPlaceholderText, getAllByText, queryAllByText } = render(
+      <CommentBar onSuccess={() => {}} />
+    );
     const input = getByPlaceholderText("Best beer ever!");
     const button = getAllByText("Comment")[1];
 
     fireEvent.change(input, { target: { value: "    " } });
     fireEvent.click(button);
-    expect(queryByRole("img")).not.toBeInTheDocument();
     expect(queryAllByText("Comment")).toHaveLength(2);
 
     await waitFor(() => expect(mockSuccess).not.toHaveBeenCalled());
@@ -167,13 +162,10 @@ describe("CommentBar", () => {
   });
 
   it("should render a button without text when the screen width is less than 768px", () => {
-    const { getByAltText, queryByRole } = render(
-      <CommentBar onSuccess={() => {}} />
-    );
+    const { queryByRole } = render(<CommentBar onSuccess={() => {}} />);
 
     /* Queried by role rather than by text: "Comment" is also the field's label,
        so a plain text query matches two elements and throws. */
-    expect(queryByRole("img")).not.toBeInTheDocument();
     expect(queryByRole("button", { name: "Comment" })).toBeInTheDocument();
 
     // Narrow the viewport; the button should swap its label for a send icon.
@@ -182,8 +174,7 @@ describe("CommentBar", () => {
       global.dispatchEvent(new Event("resize"));
     });
 
-    expect(getByAltText("Send icon")).toBeInTheDocument();
+    expect(queryByRole("button", { name: "Post comment" })).toBeInTheDocument();
     expect(queryByRole("button", { name: "Comment" })).not.toBeInTheDocument();
-    expect(queryByRole("img")).toBeInTheDocument();
   });
 });

@@ -3,117 +3,66 @@
 exports[`LoginFormMobile > matches snapshot 1`] = `
 <div>
   <main
-    class="_mobileContainer_2782d4"
+    class="flex min-h-screen flex-col gap-xl bg-ground px-md py-xl text-ink"
   >
     <header
-      class="_logoSection_2782d4"
+      class="border-b border-rule pb-md"
     >
       <a
-        class="_wrapper_72d84d"
+        class="flex items-center gap-sm no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         href="/"
       >
         <img
           alt="BeerBuddy logo"
-          class="_icon_72d84d"
+          class="size-lg"
           src="/teku.svg"
         />
         <h1
-          class="_heading_72d84d"
+          class="m-0 font-display text-lg tracking-[-0.02em] text-ink"
         >
           BeerBuddy
         </h1>
       </a>
     </header>
-    <div
-      class="ant-card ant-card-bordered _mobileCard_2782d4 css-dev-only-do-not-override-mncuj7"
-      style="background-color: rgb(230, 244, 255);"
+    <section
+      aria-label="Login form"
+      class="flex flex-col gap-lg"
     >
-      <div
-        class="ant-card-body"
+      <h1
+        class="m-0 font-display text-xl text-ink"
       >
-        <section
-          aria-label="Login form"
+        Log in
+      </h1>
+      <form
+        autocomplete="off"
+        class="flex flex-col gap-lg"
+      >
+        <div
+          class="flex flex-col gap-xs"
         >
-          <h1
-            class="_loginFormHeaderMobile_2782d4"
+          <label
+            class="text-xs tracking-[0.1em] text-ink-mute uppercase"
+            for="username-mobile"
           >
-            Log in
-          </h1>
-          <form
-            autocomplete="off"
-            class="ant-form ant-form-vertical css-dev-only-do-not-override-mncuj7 _loginFormMobile_2782d4"
-            id="basic"
-          >
-            <div
-              class="ant-form-item _loginFormUsername_2782d4 css-dev-only-do-not-override-mncuj7 ant-form-item-vertical"
-            >
-              <div
-                class="ant-row ant-form-item-row css-dev-only-do-not-override-mncuj7"
-              >
-                <div
-                  class="ant-col ant-form-item-label css-dev-only-do-not-override-mncuj7"
-                >
-                  <label
-                    class="ant-form-item-required"
-                    for="basic_username"
-                    title="Username"
-                  >
-                    Username
-                  </label>
-                </div>
-                <div
-                  class="ant-col ant-form-item-control css-dev-only-do-not-override-mncuj7"
-                >
-                  <div
-                    class="ant-form-item-control-input"
-                  >
-                    <div
-                      class="ant-form-item-control-input-content"
-                    >
-                      <input
-                        aria-required="true"
-                        class="ant-input css-dev-only-do-not-override-mncuj7 ant-input-outlined"
-                        id="basic_username"
-                        type="text"
-                        value=""
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div
-              class="ant-form-item css-dev-only-do-not-override-mncuj7 ant-form-item-vertical"
-            >
-              <div
-                class="ant-row ant-form-item-row css-dev-only-do-not-override-mncuj7"
-              >
-                <div
-                  class="ant-col ant-form-item-control css-dev-only-do-not-override-mncuj7"
-                >
-                  <div
-                    class="ant-form-item-control-input"
-                  >
-                    <div
-                      class="ant-form-item-control-input-content"
-                    >
-                      <button
-                        class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid _loginButton_2782d4"
-                        type="submit"
-                      >
-                        <span>
-                          Submit
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </form>
-        </section>
-      </div>
-    </div>
+            Username
+          </label>
+          <input
+            class="h-xl w-full min-w-0 rounded-none border-0 border-b border-rule-strong bg-transparent px-0 py-sm font-sans text-base text-ink transition-colors placeholder:text-ink-mute outline-none focus-visible:border-accent disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-accent aria-invalid:border-b-2"
+            data-slot="input"
+            id="username-mobile"
+            name="username"
+            required=""
+          />
+        </div>
+        <button
+          class="inline-flex shrink-0 cursor-pointer items-center justify-center gap-sm rounded-none font-sans whitespace-nowrap transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-accent text-ground hover:bg-ink h-xl px-md text-base"
+          data-slot="button"
+          type="submit"
+        >
+          Submit
+        </button>
+      </form>
+    </section>
   </main>
 </div>
 `;
