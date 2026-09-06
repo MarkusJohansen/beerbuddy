@@ -3,7 +3,7 @@
 exports[`SortingButton > renders correctly 1`] = `
 <div>
   <button
-    class="ant-btn css-dev-only-do-not-override-pr0fja ant-btn-primary ant-btn-icon-only ant-dropdown-trigger"
+    class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid ant-btn-icon-only ant-dropdown-trigger"
     type="button"
   >
     <span

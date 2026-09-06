@@ -4,26 +4,26 @@ exports[`BeerList > renders correctly 1`] = `
 <div>
   <section
     aria-label="Search and sorting information"
-    class="_resultsInfoContainer_ac700a"
+    class="_resultsInfoContainer_c83757"
   >
     <div
-      class="_resultsHeader_ac700a"
+      class="_resultsHeader_c83757"
     >
       <h2
-        class="_resultsInfo_ac700a"
+        class="_resultsInfo_c83757"
       >
         100
          results
       </h2>
     </div>
     <p
-      class="_resultsInfo_ac700a"
+      class="_resultsInfo_c83757"
     >
       Searched for: "
       "
     </p>
     <p
-      class="_resultsInfo_ac700a"
+      class="_resultsInfo_c83757"
     >
       Sorted by: 
       Most popular
@@ -36,38 +36,38 @@ exports[`BeerList > renders correctly 1`] = `
       class="infinite-scroll-component__outerdiv"
     >
       <div
-        class="infinite-scroll-component "
+        class="infinite-scroll-component"
         style="height: auto; overflow: auto;"
       >
         <ul
-          class="_list_ac700a"
+          class="_list_c83757"
         >
           <li>
             <a
               aria-label="21st Amendment Bitter American"
-              class="_card_539764"
-              href="./project2/beer/1"
+              class="_card_e1e69e"
+              href="./beer/1"
             >
               <div
-                class="_textWrapper_539764"
+                class="_textWrapper_e1e69e"
               >
                 <h1
-                  class="_beerName_539764"
+                  class="_beerName_e1e69e"
                 >
                   21st Amendment Bitter American
                 </h1>
                 <p
-                  class="_breweryName_539764"
+                  class="_breweryName_e1e69e"
                 >
                   21st Amendment Brewery Cafe
                 </p>
               </div>
               <div
-                class="_wrapper_0f0ab2"
+                class="_wrapper_8581d1"
               >
                 <button
                   aria-label="Upvote this beer"
-                  class="ant-btn css-dev-only-do-not-override-pr0fja ant-btn-primary ant-btn-icon-only"
+                  class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid ant-btn-icon-only"
                   style="filter: brightness(0.8);"
                   type="button"
                 >
@@ -97,13 +97,13 @@ exports[`BeerList > renders correctly 1`] = `
                 </button>
                 <h2
                   aria-label="Total score"
-                  class="_count_0f0ab2"
+                  class="_count_8581d1"
                 >
                   0
                 </h2>
                 <button
                   aria-label="Downvote this beer"
-                  class="ant-btn css-dev-only-do-not-override-pr0fja ant-btn-primary ant-btn-icon-only"
+                  class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid ant-btn-icon-only"
                   style="filter: brightness(0.8);"
                   type="button"
                 >
@@ -137,29 +137,29 @@ exports[`BeerList > renders correctly 1`] = `
           <li>
             <a
               aria-label="Borg Citra"
-              class="_card_539764"
-              href="./project2/beer/2"
+              class="_card_e1e69e"
+              href="./beer/2"
             >
               <div
-                class="_textWrapper_539764"
+                class="_textWrapper_e1e69e"
               >
                 <h1
-                  class="_beerName_539764"
+                  class="_beerName_e1e69e"
                 >
                   Borg Citra
                 </h1>
                 <p
-                  class="_breweryName_539764"
+                  class="_breweryName_e1e69e"
                 >
                   Borg Brugghús
                 </p>
               </div>
               <div
-                class="_wrapper_0f0ab2"
+                class="_wrapper_8581d1"
               >
                 <button
                   aria-label="Upvote this beer"
-                  class="ant-btn css-dev-only-do-not-override-pr0fja ant-btn-primary ant-btn-icon-only"
+                  class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid ant-btn-icon-only"
                   style="filter: brightness(0.8);"
                   type="button"
                 >
@@ -189,13 +189,13 @@ exports[`BeerList > renders correctly 1`] = `
                 </button>
                 <h2
                   aria-label="Total score"
-                  class="_count_0f0ab2"
+                  class="_count_8581d1"
                 >
                   0
                 </h2>
                 <button
                   aria-label="Downvote this beer"
-                  class="ant-btn css-dev-only-do-not-override-pr0fja ant-btn-primary ant-btn-icon-only"
+                  class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid ant-btn-icon-only"
                   style="filter: brightness(0.8);"
                   type="button"
                 >
@@ -229,29 +229,29 @@ exports[`BeerList > renders correctly 1`] = `
           <li>
             <a
               aria-label="Sierra Nevada Pale Ale"
-              class="_card_539764"
-              href="./project2/beer/3"
+              class="_card_e1e69e"
+              href="./beer/3"
             >
               <div
-                class="_textWrapper_539764"
+                class="_textWrapper_e1e69e"
               >
                 <h1
-                  class="_beerName_539764"
+                  class="_beerName_e1e69e"
                 >
                   Sierra Nevada Pale Ale
                 </h1>
                 <p
-                  class="_breweryName_539764"
+                  class="_breweryName_e1e69e"
                 >
                   Sierra Nevada Brewing Company
                 </p>
               </div>
               <div
-                class="_wrapper_0f0ab2"
+                class="_wrapper_8581d1"
               >
                 <button
                   aria-label="Upvote this beer"
-                  class="ant-btn css-dev-only-do-not-override-pr0fja ant-btn-primary ant-btn-icon-only"
+                  class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid ant-btn-icon-only"
                   style="filter: brightness(0.8);"
                   type="button"
                 >
@@ -281,13 +281,13 @@ exports[`BeerList > renders correctly 1`] = `
                 </button>
                 <h2
                   aria-label="Total score"
-                  class="_count_0f0ab2"
+                  class="_count_8581d1"
                 >
                   0
                 </h2>
                 <button
                   aria-label="Downvote this beer"
-                  class="ant-btn css-dev-only-do-not-override-pr0fja ant-btn-primary ant-btn-icon-only"
+                  class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid ant-btn-icon-only"
                   style="filter: brightness(0.8);"
                   type="button"
                 >
@@ -321,29 +321,29 @@ exports[`BeerList > renders correctly 1`] = `
           <li>
             <a
               aria-label="Mono Stereo Mosaic"
-              class="_card_539764"
-              href="./project2/beer/4"
+              class="_card_e1e69e"
+              href="./beer/4"
             >
               <div
-                class="_textWrapper_539764"
+                class="_textWrapper_e1e69e"
               >
                 <h1
-                  class="_beerName_539764"
+                  class="_beerName_e1e69e"
                 >
                   Mono Stereo Mosaic
                 </h1>
                 <p
-                  class="_breweryName_539764"
+                  class="_breweryName_e1e69e"
                 >
                   Mono Brewing Co.
                 </p>
               </div>
               <div
-                class="_wrapper_0f0ab2"
+                class="_wrapper_8581d1"
               >
                 <button
                   aria-label="Upvote this beer"
-                  class="ant-btn css-dev-only-do-not-override-pr0fja ant-btn-primary ant-btn-icon-only"
+                  class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid ant-btn-icon-only"
                   style="filter: brightness(0.8);"
                   type="button"
                 >
@@ -373,13 +373,13 @@ exports[`BeerList > renders correctly 1`] = `
                 </button>
                 <h2
                   aria-label="Total score"
-                  class="_count_0f0ab2"
+                  class="_count_8581d1"
                 >
                   0
                 </h2>
                 <button
                   aria-label="Downvote this beer"
-                  class="ant-btn css-dev-only-do-not-override-pr0fja ant-btn-primary ant-btn-icon-only"
+                  class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid ant-btn-icon-only"
                   style="filter: brightness(0.8);"
                   type="button"
                 >
@@ -418,6 +418,9 @@ exports[`BeerList > renders correctly 1`] = `
             Loading...
           </b>
         </p>
+        <div
+          style="height: 1px;"
+        />
       </div>
     </div>
   </section>

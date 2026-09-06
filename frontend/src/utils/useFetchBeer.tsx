@@ -1,45 +1,14 @@
 import { useEffect, useState } from "react";
-import { Beer } from "../types/types";
 
-/**
- * fetch information about a single beer.
- * @param id - the id of the beer to fetch
- * @param onSuccess - callback for when the fetch is successful
- * @returns - the beer object
- */
-const fetchBeer = async (id: number, onSuccess: (data: Beer) => void) => {
-  const userId = localStorage.getItem("userIdBeerBuddy");
-  const query = {
-    query: `{ beer(id: ${id} userId: "${userId}") }`,
-  };
-
-  return await fetch(import.meta.env.VITE_APP_BACKEND_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify(query),
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      return response.json();
-    })
-    .then((data) => {
-      onSuccess(data.data.beer[0]);
-    })
-    .catch((error) => {
-      console.error("There was a problem with the fetch operation:", error);
-    });
-};
+import { fetchBeer } from "../api/client";
+import type { Beer } from "../types/types";
 
 /**
  * Custom hook for fetching a single beer.
  * @param id - the id of the beer to fetch
- * @param newVote - boolean to indicate if a new vote has been cast
- * @returns - the beer object, loading state and error state
+ * @param newVote - flips when a vote is cast, to refetch
+ * @param newComment - flips when a comment is posted, to refetch
+ * @returns the beer, plus loading and error state
  */
 const useFetchBeer = ({
   id,
@@ -54,14 +23,27 @@ const useFetchBeer = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
 
-  const onSuccess = (data: Beer) => {
-    setIsLoading(false);
-    setIsError(false);
-    setBeer(data);
-  };
-
   useEffect(() => {
-    fetchBeer(id, onSuccess);
+    let cancelled = false;
+
+    setIsLoading(true);
+    fetchBeer(id)
+      .then((data) => {
+        if (cancelled) return;
+        setBeer(data);
+        setIsError(false);
+      })
+      .catch(() => {
+        if (!cancelled) setIsError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    // A slower earlier request must not overwrite a newer beer's data.
+    return () => {
+      cancelled = true;
+    };
   }, [id, newVote, newComment]);
 
   return { beer, isLoading, isError };

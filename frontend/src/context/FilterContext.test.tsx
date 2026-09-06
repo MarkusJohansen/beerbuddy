@@ -1,8 +1,12 @@
 import { render, act } from "@testing-library/react";
-import { FilterContextProvider, FilterContextType } from "./FilterContext";
+import { FilterContextProvider, type FilterContextType } from "./FilterContext";
 import { FilterContext } from "./FilterContext";
-import { ReactNode, useContext as useContextMock } from "react";
-import { vi, vitest } from "vitest";
+import { type ReactNode, useContext as useContextMock } from "react";
+import { vi, vitest, type Mock } from "vitest";
+
+// The provider loads the catalogue's styles on mount; a unit test should not
+// reach the network for them.
+vi.mock("../api/client", () => ({ fetchStyles: vi.fn(async () => []) }));
 import { useState as useStateMock } from "react";
 import { useEffect as useEffectMock } from "react";
 
@@ -21,7 +25,7 @@ describe("FilterContextProvider", () => {
   const setState = vi.fn();
 
   beforeEach(() => {
-    (useStateMock as jest.Mock).mockImplementation((init) => [init, setState]);
+    (useStateMock as Mock).mockImplementation((init) => [init, setState]);
   });
 
   afterEach(() => {
@@ -102,7 +106,7 @@ describe("FilterContext", () => {
   beforeEach(() => {
     localStorage.clear();
 
-    (useContextMock as jest.Mock).mockImplementation(() => ({
+    (useContextMock as Mock).mockImplementation(() => ({
       searchString: "",
       setSearchString: setState,
       IBU: [0, 138],
@@ -114,7 +118,7 @@ describe("FilterContext", () => {
       sorting: "top",
       setSorting: setState,
     }));
-    (useEffectMock as jest.Mock).mockImplementation((fn) => fn());
+    (useEffectMock as Mock).mockImplementation((fn) => fn());
   });
 
   it("provides the filter context", () => {

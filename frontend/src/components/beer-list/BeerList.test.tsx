@@ -1,62 +1,53 @@
-import { describe, it, expect, vi, afterEach, Mock } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import BeerList from "./BeerList";
 import { axe } from "jest-axe";
 import useFetchMoreBeers from "../../utils/useFetchMoreBeers";
 
+vi.mock("../../utils/useFetchMoreBeers", () => {
+  const beers = [
+    {
+      beer_name: "21st Amendment Bitter American",
+      brewery_name: "21st Amendment Brewery Cafe",
+      vote_sum: 0,
+      beer_id: 1,
+      reaction: "unreact" as const,
+    },
+    {
+      beer_name: "Borg Citra",
+      brewery_name: "Borg Brugghús",
+      vote_sum: 0,
+      beer_id: 2,
+      reaction: "unreact" as const,
+    },
+    {
+      beer_name: "Sierra Nevada Pale Ale",
+      brewery_name: "Sierra Nevada Brewing Company",
+      vote_sum: 0,
+      beer_id: 3,
+      reaction: "unreact" as const,
+    },
+    {
+      beer_name: "Mono Stereo Mosaic",
+      brewery_name: "Mono Brewing Co.",
+      vote_sum: 0,
+      beer_id: 4,
+      reaction: "unreact" as const,
+    },
+  ];
+
+  return {
+    __esModule: true,
+    default: () => ({
+      beers,
+      totalCount: 100,
+      fetchMore: vi.fn(async () => {}),
+    }),
+  };
+});
 describe("BeerList", () => {
-  vi.mock("../../utils/useFetchMoreBeers", () => {
-    const mockData = {
-      data: {
-        beers: [
-          {
-            beer_name: "21st Amendment Bitter American",
-            brewery_name: "21st Amendment Brewery Cafe",
-            vote_sum: "0",
-            beer_id: 1,
-            beer_count: 100,
-          },
-          {
-            beer_name: "Borg Citra",
-            brewery_name: "Borg Brugghús",
-            vote_sum: "0",
-            beer_id: 2,
-            beer_count: 100,
-          },
-          {
-            beer_name: "Sierra Nevada Pale Ale",
-            brewery_name: "Sierra Nevada Brewing Company",
-            vote_sum: "0",
-            beer_id: 3,
-            beer_count: 100,
-          },
-          {
-            beer_name: "Mono Stereo Mosaic",
-            brewery_name: "Mono Brewing Co.",
-            vote_sum: "0",
-            beer_id: 4,
-            beer_count: 100,
-          },
-        ],
-      },
-    };
-
-    return {
-      __esModule: true,
-      default: () => ({
-        beers: mockData.data.beers,
-        fetchMore: vi.fn(
-          async () =>
-            await Promise.resolve({
-              json: () => Promise.resolve(mockData),
-            })
-        ) as Mock,
-      }),
-    };
-  });
-
-  const { beers, fetchMore } = useFetchMoreBeers();
+  const { beers, totalCount, fetchMore } = useFetchMoreBeers();
 
   afterEach(() => {
     vi.clearAllMocks();
@@ -64,21 +55,21 @@ describe("BeerList", () => {
 
   it("is accessible", async () => {
     const { container } = render(
-      <BeerList beers={beers} fetchMore={fetchMore} />
+      <BeerList beers={beers} totalCount={totalCount} fetchMore={fetchMore} />
     );
     expect(await axe(container)).toHaveNoViolations();
   });
 
   it("renders correctly", () => {
     const { container } = render(
-      <BeerList beers={beers} fetchMore={fetchMore} />
+      <BeerList beers={beers} totalCount={totalCount} fetchMore={fetchMore} />
     );
     expect(container).toMatchSnapshot();
   });
 
   it("renders with correct number of beers", async () => {
     const { getByText, getAllByRole } = render(
-      <BeerList beers={beers} fetchMore={fetchMore} />
+      <BeerList beers={beers} totalCount={totalCount} fetchMore={fetchMore} />
     );
 
     expect(getByText("Loading...")).toBeInTheDocument();
@@ -90,7 +81,7 @@ describe("BeerList", () => {
 
   it("renders with correct names", async () => {
     const { getByText } = render(
-      <BeerList beers={beers} fetchMore={fetchMore} />
+      <BeerList beers={beers} totalCount={totalCount} fetchMore={fetchMore} />
     );
     expect(getByText("Loading...")).toBeInTheDocument();
 

@@ -43,19 +43,42 @@ The issues should be labeled with the following labels:
 - `refactor`: The issue is a refactoring task.
 - `frontend`: The issue is a frontend task.
 - `backend`: The issue is a backend task.
-- `status::backlog`: The issue is in the backlog.`
-- `status::selected for development`: The issue has been selected for development.
-- `status::in progress`: The issue is currently being worked on.
-- `status::in review`: The issue is currently being reviewed.
+- `status: backlog`: The issue is in the backlog.
+- `status: selected for development`: The issue has been selected for development.
+- `status: in progress`: The issue is currently being worked on.
+- `status: in review`: The issue is currently being reviewed.
+
+The `status::` prefix these labels used to carry was GitLab scoped-label syntax and
+has no meaning on GitHub, where the repository now lives.
 
 ---
 
-# Merge request
+# Pull requests
 
-When a task is complete, a merge request must be created. The merge request must be assigned to the person who will be reviewing the merge request. The merge request must have a title and a description, both in english. The title should be a short description of the task, and it may be the same as the commit message.
+The repository is hosted on GitHub, so a completed task becomes a pull request. This
+document previously described GitLab merge requests, which was left over from the
+project's original home on the NTNU GitLab instance.
 
-Before merging, the merge request must be reviewed by another person. The reviewer must check that the code follows the coding conventions, and that the code works as intended. The reviewer must also check that the merge request follows the commit conventions. If the reviewer finds any issues, there must be made a made comments on the code and open threads. The threads must be closed by the person who started the thread. All threads must be resolved before the merge request can be merged.
+When a task is complete, open a pull request and request a reviewer. The title and
+description are in English; the title should be a short description of the task, and
+may be the same as the commit message.
 
-When merging, the branch must be rebased onto the `main` branch to resolve all possible conflicts, and also to keep a clean commit history.
+Before merging:
 
-The merge request must be merged using the `Squash commits` option, to keep a clean commit history. Has there been several people working on a merge request, the merge commit must contain their names in a list, in the following format: `Co-authored-by: {name}`. The merge commit must also be on the format specified in the commit conventions.
+- **CI must be green.** [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
+  runs lint, format, type check and both test suites for both packages. It is the
+  same command set as `make check`, so a green local run means a green CI run.
+- **Another person must review it.** The reviewer checks that the code follows the
+  conventions, that it works as intended, and that the commits follow the commit
+  conventions. Review comments are left as threads on the code, and the person who
+  opened a thread is the one who resolves it. All threads must be resolved before
+  merging.
+- **Documentation must match.** README, ARCHITECTURE and the per-package READMEs
+  state concrete counts and defects. If behaviour changed, the document describing
+  it changes in the same pull request.
+
+Rebase onto `main` before merging, to resolve conflicts and keep a clean history.
+
+Merge with **Squash and merge**. Where several people worked on a branch, list them
+in the merge commit as `Co-authored-by: {name}`, and keep the merge commit in the
+format specified in the commit conventions above.

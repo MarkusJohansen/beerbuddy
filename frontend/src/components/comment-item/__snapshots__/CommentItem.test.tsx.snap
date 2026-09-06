@@ -3,46 +3,46 @@
 exports[`CommentItem > matches snapshot 1`] = `
 <div>
   <div
-    class="_commentContainer_7a79ad"
+    class="_commentContainer_c1ec95"
   >
     <div
-      class="_commentContentContainer_7a79ad"
+      class="_commentContentContainer_c1ec95"
     >
       <div>
         <div
-          class="_commentHeader_7a79ad"
+          class="_commentHeader_c1ec95"
         >
           <p
-            class="_commentAuthor_7a79ad"
+            class="_commentAuthor_c1ec95"
           >
             Martin Hansa-Borg
           </p>
           <p
-            class="_dot_7a79ad"
+            class="_dot_c1ec95"
           >
             •
           </p>
           <p
-            class="_commentDate_7a79ad"
+            class="_commentDate_c1ec95"
           >
             5 days ago
           </p>
         </div>
       </div>
       <p
-        class="_commentText_7a79ad"
+        class="_commentText_c1ec95"
       >
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla cursus sem diam, eget consectetur quam interdum eu. Aliquam ornare lectus vel sapien blandit eleifend. Aenean ac vestibulum metus. Nam auctor sed dui dapibus pharetra.
       </p>
     </div>
     <button
       aria-label="Delete comment"
-      class="_buttonContainer_7a79ad"
+      class="_buttonContainer_c1ec95"
     >
       <img
         alt="Trash icon"
         height="32px"
-        src="/project2/delete-kopi.svg"
+        src="/delete-kopi.svg"
         width="32px"
       />
     </button>

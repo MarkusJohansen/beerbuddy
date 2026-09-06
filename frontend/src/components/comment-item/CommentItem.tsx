@@ -1,4 +1,5 @@
 import styles from "./CommentItem.module.css";
+import { deleteComment } from "../../api/client";
 
 interface CommentItemInterface {
   id: number;
@@ -8,29 +9,6 @@ interface CommentItemInterface {
   timestamp: string;
   onDelete: () => void;
 }
-
-const deleteComment = async (userId: string, commentId: string) => {
-  const query = {
-    query: `{ deleteComment(userId: "${userId}", commentId: ${commentId} ) }`,
-  };
-  return await fetch(import.meta.env.VITE_APP_BACKEND_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify(query),
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      return response.json();
-    })
-    .catch((error) => {
-      console.error("There was a problem with the fetch operation:", error);
-    });
-};
 
 /**
  * Function for converting a timestamp to a human readable format.
@@ -103,10 +81,11 @@ const CommentItem = ({
         <button
           className={styles.buttonContainer}
           onClick={() => {
-            deleteComment(
-              localStorage.getItem("userIdBeerBuddy") ?? "",
-              id.toString()
-            ).finally(() => onDelete());
+            // Ownership is enforced by the API, which answers 403 for someone
+            // else's comment. This button is only rendered for your own.
+            deleteComment(id)
+              .catch((error) => console.error(error))
+              .finally(() => onDelete());
           }}
           aria-label="Delete comment"
         >

@@ -3,11 +3,11 @@
 exports[`Voter > should render 1`] = `
 <div>
   <div
-    class="_wrapper_0f0ab2"
+    class="_wrapper_8581d1"
   >
     <button
       aria-label="Upvote this beer"
-      class="ant-btn css-dev-only-do-not-override-pr0fja ant-btn-primary ant-btn-icon-only"
+      class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid ant-btn-icon-only"
       style="filter: brightness(0.8);"
       type="button"
     >
@@ -37,13 +37,13 @@ exports[`Voter > should render 1`] = `
     </button>
     <h2
       aria-label="Total score"
-      class="_count_0f0ab2"
+      class="_count_8581d1"
     >
       10
     </h2>
     <button
       aria-label="Downvote this beer"
-      class="ant-btn css-dev-only-do-not-override-pr0fja ant-btn-primary ant-btn-icon-only"
+      class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid ant-btn-icon-only"
       style="filter: brightness(0.8);"
       type="button"
     >

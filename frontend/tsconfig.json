@@ -1,25 +1,26 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "skipLibCheck": true,
-
-    /* Bundler mode */
     "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "types": ["vite/client", "vitest/globals"],
+
     "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx",
+    "skipLibCheck": true,
 
-    /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["**/*.ts", "**/*.tsx", "./vite.config.ts", "src/vitest-setup.ts"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  // ../backend/src is included for types only. src/api/client.ts imports the
+  // backend's AppType so request and response shapes are checked at build time
+  // rather than generated — see openspec .../specs/http-api/spec.md.
+  "include": ["src", "tests", "vite.config.ts", "../backend/src"]
 }

@@ -4,29 +4,29 @@ exports[`BeerCard > renders correctly 1`] = `
 <div>
   <a
     aria-label="Example beer"
-    class="_card_539764"
-    href="./project2/beer/2"
+    class="_card_e1e69e"
+    href="./beer/2"
   >
     <div
-      class="_textWrapper_539764"
+      class="_textWrapper_e1e69e"
     >
       <h1
-        class="_beerName_539764"
+        class="_beerName_e1e69e"
       >
         Example beer
       </h1>
       <p
-        class="_breweryName_539764"
+        class="_breweryName_e1e69e"
       >
         Example brewery
       </p>
     </div>
     <div
-      class="_wrapper_0f0ab2"
+      class="_wrapper_8581d1"
     >
       <button
         aria-label="Upvote this beer"
-        class="ant-btn css-dev-only-do-not-override-pr0fja ant-btn-primary ant-btn-icon-only"
+        class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid ant-btn-icon-only"
         style="filter: brightness(0.8);"
         type="button"
       >
@@ -56,13 +56,13 @@ exports[`BeerCard > renders correctly 1`] = `
       </button>
       <h2
         aria-label="Total score"
-        class="_count_0f0ab2"
+        class="_count_8581d1"
       >
         10
       </h2>
       <button
         aria-label="Downvote this beer"
-        class="ant-btn css-dev-only-do-not-override-pr0fja ant-btn-primary ant-btn-icon-only"
+        class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid ant-btn-icon-only"
         style="filter: brightness(0.8);"
         type="button"
       >

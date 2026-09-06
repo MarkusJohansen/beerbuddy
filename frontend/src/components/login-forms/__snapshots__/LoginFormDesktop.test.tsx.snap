@@ -3,32 +3,32 @@
 exports[`LoginFormDesktop > matches snapshot 1`] = `
 <div>
   <main
-    class="_container_b973b1"
+    class="_container_7d645a"
   >
     <header
-      class="_logoContainer_b973b1"
+      class="_logoContainer_7d645a"
     >
       <a
-        class="_wrapper_4f3c83"
-        href="/project2"
+        class="_wrapper_72d84d"
+        href="/"
       >
         <img
           alt="BeerBuddy logo"
-          class="_icon_4f3c83"
-          src="/project2/teku.svg"
+          class="_icon_72d84d"
+          src="/teku.svg"
         />
         <h1
-          class="_heading_4f3c83"
+          class="_heading_72d84d"
         >
           BeerBuddy
         </h1>
       </a>
     </header>
     <div
-      class="_loginContainer_b973b1"
+      class="_loginContainer_7d645a"
     >
       <section
-        class="_loginText_b973b1"
+        class="_loginText_7d645a"
       >
         <h2>
           Taste, Rate, Repeat -
@@ -44,10 +44,10 @@ exports[`LoginFormDesktop > matches snapshot 1`] = `
       </section>
       <section
         aria-label="Login form"
-        class="_loginFormContainer_b973b1"
+        class="_loginFormContainer_7d645a"
       >
         <div
-          class="ant-card ant-card-bordered css-dev-only-do-not-override-pr0fja"
+          class="ant-card ant-card-bordered css-dev-only-do-not-override-mncuj7"
           style="height: 100%; background-color: rgb(230, 244, 255);"
         >
           <div
@@ -59,17 +59,17 @@ exports[`LoginFormDesktop > matches snapshot 1`] = `
             </h1>
             <form
               autocomplete="off"
-              class="ant-form ant-form-vertical css-dev-only-do-not-override-pr0fja _loginForm_b973b1"
+              class="ant-form ant-form-vertical css-dev-only-do-not-override-mncuj7 _loginForm_7d645a"
               id="basic"
             >
               <div
-                class="ant-form-item css-dev-only-do-not-override-pr0fja"
+                class="ant-form-item css-dev-only-do-not-override-mncuj7 ant-form-item-vertical"
               >
                 <div
-                  class="ant-row ant-form-item-row css-dev-only-do-not-override-pr0fja"
+                  class="ant-row ant-form-item-row css-dev-only-do-not-override-mncuj7"
                 >
                   <div
-                    class="ant-col ant-form-item-label css-dev-only-do-not-override-pr0fja"
+                    class="ant-col ant-form-item-label css-dev-only-do-not-override-mncuj7"
                   >
                     <label
                       class="ant-form-item-required"
@@ -80,7 +80,7 @@ exports[`LoginFormDesktop > matches snapshot 1`] = `
                     </label>
                   </div>
                   <div
-                    class="ant-col ant-form-item-control css-dev-only-do-not-override-pr0fja"
+                    class="ant-col ant-form-item-control css-dev-only-do-not-override-mncuj7"
                   >
                     <div
                       class="ant-form-item-control-input"
@@ -90,7 +90,7 @@ exports[`LoginFormDesktop > matches snapshot 1`] = `
                       >
                         <input
                           aria-required="true"
-                          class="ant-input css-dev-only-do-not-override-pr0fja"
+                          class="ant-input css-dev-only-do-not-override-mncuj7 ant-input-outlined"
                           id="basic_username"
                           type="text"
                           value=""
@@ -101,13 +101,13 @@ exports[`LoginFormDesktop > matches snapshot 1`] = `
                 </div>
               </div>
               <div
-                class="ant-form-item css-dev-only-do-not-override-pr0fja"
+                class="ant-form-item css-dev-only-do-not-override-mncuj7 ant-form-item-vertical"
               >
                 <div
-                  class="ant-row ant-form-item-row css-dev-only-do-not-override-pr0fja"
+                  class="ant-row ant-form-item-row css-dev-only-do-not-override-mncuj7"
                 >
                   <div
-                    class="ant-col ant-form-item-control css-dev-only-do-not-override-pr0fja"
+                    class="ant-col ant-form-item-control css-dev-only-do-not-override-mncuj7"
                   >
                     <div
                       class="ant-form-item-control-input"
@@ -116,7 +116,7 @@ exports[`LoginFormDesktop > matches snapshot 1`] = `
                         class="ant-form-item-control-input-content"
                       >
                         <button
-                          class="ant-btn css-dev-only-do-not-override-pr0fja ant-btn-primary _loginButton_b973b1"
+                          class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid _loginButton_7d645a"
                           type="submit"
                         >
                           <span>

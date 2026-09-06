@@ -1,41 +1,75 @@
+# Development stack. `make up`, or `podman compose up`.
+#
+# Everything is namespaced under the project name below, so this shares nothing
+# with other podman projects on the same machine. Postgres is published on 5433
+# rather than 5432 for the same reason.
+
+name: beerbuddy
+
 services:
-  frontend:
-    image: beer-buddy/frontend
+  db:
+    image: docker.io/library/postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-beerbuddy}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-beerbuddy}
+      POSTGRES_DB: ${POSTGRES_DB:-beers}
+    volumes:
+      # Postgres 18 keeps PGDATA under /var/lib/postgresql/18/docker and declares
+      # the volume one level up. Mounting the pre-18 /var/lib/postgresql/data path
+      # silently writes to the container layer and loses everything on recreate.
+      - db-data:/var/lib/postgresql
+      # Applied once, on an empty volume, in filename order: schema then seed.
+      - ./backend/db:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5433:5432"
+    healthcheck:
+      # What makes `depends_on: service_healthy` meaningful, and what replaced the
+      # wait-for-database.sh polling script.
+      test:
+        ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-beerbuddy} -d ${POSTGRES_DB:-beers}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  backend:
     build:
-      context: frontend
-      dockerfile: Dockerfile
+      context: ./backend
+      target: dev
+    restart: unless-stopped
+    # The original compose gave this service no env_file at all, so it ran on
+    # defaults and connected to the wrong database.
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-beerbuddy}:${POSTGRES_PASSWORD:-beerbuddy}@db:5432/${POSTGRES_DB:-beers}
+      CORS_ORIGINS: http://localhost:5173
+      PORT: "3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      # Keeps the image's node_modules rather than letting the bind mount hide it.
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build:
+      context: ./frontend
+      target: dev
+    restart: unless-stopped
     env_file:
       - ./frontend/.env
-    restart: always
+    depends_on:
+      - backend
     volumes:
       - ./frontend:/app
       - /app/node_modules
     ports:
-      - 5173:5173
+      - "5173:5173"
 
-  mysqldb:
-    image: mariadb:10.4
-    restart: always
-    env_file:
-      - ./.env
-    volumes:
-      - ./backend/database-seed.sql:/docker-entrypoint-initdb.d/setup.sql
-    ports:
-      - 3306:3306
-    environment:
-      - MYSQL_ROOT_PASSWORD=${ROOT_PASS}
-      - MYSQL_DATABASE=${DB_NAME}
-
-  backend:
-    depends_on:
-      - mysqldb
-    image: beer-buddy/backend
-    build:
-      context: backend
-      dockerfile: Dockerfile
-    restart: always
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-    ports:
-      - 3000:3000
+volumes:
+  db-data:

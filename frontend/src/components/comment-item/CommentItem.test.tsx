@@ -1,21 +1,19 @@
-import { describe, it, expect, vi, Mock } from "vitest";
-import { render } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { act, render } from "@testing-library/react";
 import CommentItem from "./CommentItem";
 import { axe } from "jest-axe";
-import { act } from "react-dom/test-utils";
+
+vi.mock("../../api/client", () => ({ deleteComment: vi.fn(async () => {}) }));
 
 const mockDeleteComment = vi.fn();
-global.localStorage = {
-  ...global.localStorage,
-  getItem: vi.fn(() => "unique-id-123"),
-};
 
-global.fetch = vi.fn(() =>
-  Promise.resolve({
-    ok: true,
-    json: () => Promise.resolve(),
-  })
-) as Mock;
+// jsdom 30 defines localStorage as a readonly accessor, so it is stubbed.
+vi.stubGlobal("localStorage", {
+  getItem: vi.fn(() => "unique-id-123"),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+});
 
 const Template = () => {
   /* Create a timestamp that is 5 days old */
@@ -52,9 +50,10 @@ describe("CommentItem", () => {
     expect(getByText("5 days ago")).toBeInTheDocument();
   });
 
-  it("calls onDelete when delete button is clicked", () => {
+  it("calls onDelete when delete button is clicked", async () => {
     const { getByRole } = render(<Template />);
-    act(() => {
+    // deleteComment resolves before onDelete runs, so the click has to be awaited.
+    await act(async () => {
       getByRole("button").click();
     });
     expect(mockDeleteComment).toHaveBeenCalled();

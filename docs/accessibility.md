@@ -75,6 +75,12 @@ The application uses ant-design components for most of the interactive elements.
 
 When we used Ant Design components, we found that the Slider component was not very accessible. This was highlighted by Firefox Accessibility, WAVE and aXe. We therefore switched this component out for the Slider-component from MUI.
 
+**MUI is carried for this one component and nothing else.** It looks like an obvious
+second component library to delete, and deleting it reintroduces the audit failure.
+If you want it gone, the burden is a replacement — a native `<input type="range">`
+pair, or an Ant Design slider on a version that has fixed the issue — that passes
+the axe assertions in `Filters`, demonstrated before the dependency is removed.
+
 ### Responsive design
 
 The application is designed to be responsive, and to work on different screen sizes.
@@ -140,6 +146,16 @@ Using WAVE we have discovered that the main page has no errors, warnings, or con
 ### aXe
 
 jest-axe is a tool that is used to find accessibility issues in the application. It usually looks for the most common accessibility issues, which makes it useful for an extra layer of accessibility testing. We do not rely solely on this tool, but it is useful to find issues that we might have missed. Link to the tool: https://github.com/NickColley/jest-axe
+
+Its assertions run inside the unit suite, so **an accessibility failure is a test
+failure**, not a warning. `make test-frontend` runs them; all of them pass. When one
+fails, read the violation — the suite is otherwise render-plus-snapshot, and the axe
+assertions are the part of it that checks behaviour rather than markup.
+
+The matcher is registered through `expect.extend` in `src/vitest-setup.ts`, with its
+Vitest type declared in `src/vitest.d.ts`. It previously came from `vitest-axe`, a
+wrapper last published in October 2022 that predates Vitest 1.0; moving to `jest-axe`
+directly left the assertions unchanged and removed a dependency.
 
 ### Lighthouse
 

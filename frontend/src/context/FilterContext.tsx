@@ -1,4 +1,6 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
+
+import { fetchStyles } from "../api/client";
 
 /**
  * interface for the FilterContext
@@ -12,6 +14,7 @@ import { createContext, useState } from "react";
  * @param setStyles - function to update the styles
  * @param sorting - the sorting to apply
  * @param setSorting - function to update the sorting
+ * @param allStyles - every style present in the catalogue, from the API
  */
 export interface FilterContextType {
   searchString: string;
@@ -24,6 +27,11 @@ export interface FilterContextType {
   setStyles: (styles: string[]) => void;
   sorting: string;
   setSorting: (sorting: string) => void;
+  /**
+   * Every style present in the catalogue. Fetched once, and used to expand the
+   * "Other" filter option into the styles not named individually.
+   */
+  allStyles: string[];
 }
 
 /**
@@ -40,6 +48,7 @@ export const FilterContext = createContext<FilterContextType>({
   setStyles: () => {},
   sorting: "top",
   setSorting: () => {},
+  allStyles: [],
 });
 
 /**
@@ -65,6 +74,13 @@ export const FilterContextProvider: React.FC<
   const [sorting, setSorting] = useState<string>(
     localStorage.getItem("sorting") || "top"
   );
+  const [allStyles, setAllStyles] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetchStyles()
+      .then(setAllStyles)
+      .catch((error) => console.error("Could not load beer styles:", error));
+  }, []);
 
   return (
     <FilterContext.Provider
@@ -79,6 +95,7 @@ export const FilterContextProvider: React.FC<
         setStyles,
         sorting,
         setSorting,
+        allStyles,
       }}
     >
       {children}

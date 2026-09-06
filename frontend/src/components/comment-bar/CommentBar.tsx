@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { useParams } from "react-router-dom";
 import protectRoute from "../../utils/protectRoute";
 import useWindowDimensions from "../../utils/useWindowDimensions";
+import { addComment } from "../../api/client";
 
 interface CommentBarInterface {
   onSuccess: () => void;
@@ -17,29 +18,14 @@ interface CommentBarInterface {
  */
 const postComment = async (beerId: string, comment: string) => {
   if (await protectRoute()) return "Error";
-  const userId = localStorage.getItem("userIdBeerBuddy");
-  const query = {
-    query: `{ comment(userId: "${userId}", beerId: ${beerId}, comment: "${comment}") }`,
-  };
 
-  return await fetch(import.meta.env.VITE_APP_BACKEND_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify(query),
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      return response.json();
-    })
-    .catch((error) => {
-      console.error("There was a problem with the fetch operation:", error);
-      return "Error";
-    });
+  try {
+    await addComment(Number(beerId), comment);
+    return "OK";
+  } catch (error) {
+    console.error("Could not post comment:", error);
+    return "Error";
+  }
 };
 
 /**

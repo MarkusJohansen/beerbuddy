@@ -3,28 +3,27 @@
 exports[`MobileBeerAttribute > renders correctly 1`] = `
 <div>
   <div
-    class="_mobileContainer_eeaf5b"
+    class="_mobileContainer_fae872"
   >
     <div>
       <div
-        class="_mobileHeaderContainer_eeaf5b"
+        class="_mobileHeaderContainer_fae872"
       >
         <img
           alt="alternative text"
           height="32px"
-          src=""
           width="20px"
         />
         <div
-          class="_textContainer_eeaf5b"
+          class="_textContainer_fae872"
         >
           <h3
-            class="_mobileHeading_eeaf5b"
+            class="_mobileHeading_fae872"
           >
             Testdata 1
           </h3>
           <p
-            class="_mobileText_eeaf5b"
+            class="_mobileText_fae872"
           >
             1
           </p>
@@ -33,24 +32,23 @@ exports[`MobileBeerAttribute > renders correctly 1`] = `
     </div>
     <div>
       <div
-        class="_mobileHeaderContainer_eeaf5b"
+        class="_mobileHeaderContainer_fae872"
       >
         <img
           alt="alternative text"
           height="32px"
-          src=""
           width="20px"
         />
         <div
-          class="_textContainer_eeaf5b"
+          class="_textContainer_fae872"
         >
           <h3
-            class="_mobileHeading_eeaf5b"
+            class="_mobileHeading_fae872"
           >
             Testdata 2
           </h3>
           <p
-            class="_mobileText_eeaf5b"
+            class="_mobileText_fae872"
           >
             2
           </p>
@@ -59,24 +57,23 @@ exports[`MobileBeerAttribute > renders correctly 1`] = `
     </div>
     <div>
       <div
-        class="_mobileHeaderContainer_eeaf5b"
+        class="_mobileHeaderContainer_fae872"
       >
         <img
           alt="alternative text"
           height="32px"
-          src=""
           width="20px"
         />
         <div
-          class="_textContainer_eeaf5b"
+          class="_textContainer_fae872"
         >
           <h3
-            class="_mobileHeading_eeaf5b"
+            class="_mobileHeading_fae872"
           >
             Testdata 3
           </h3>
           <p
-            class="_mobileText_eeaf5b"
+            class="_mobileText_fae872"
           >
             3
           </p>

@@ -1,236 +1,251 @@
-# BeerBuddy backend
+# BeerBuddy API
 
-Express + GraphQL + Sequelize, on `:3000`. One endpoint, nine resolvers, five tables, and
-a database that is either a SQLite file or a MySQL server depending on one environment
-variable.
+Bun + Hono + PostgreSQL. Eleven routes over the beer catalogue.
 
-For the design — the request path, the caching layer, the data model and the full field
-reference — see [`../ARCHITECTURE.md`](../ARCHITECTURE.md).
+> **No authentication.** `X-User-Id` is a UUID the browser generated. Any client can
+> send any value, including someone else's. Do not expose this on an untrusted
+> network.
 
-| | |
-| --- | --- |
-| [Run it](#run-it) | SQLite, in three commands |
-| [Configuration](#configuration) | every variable `db.ts` reads |
-| [The API](#the-api) | the nine fields, and how to explore them |
-| [Running against MySQL](#running-against-mysql) | the long way, and the container way |
-| [Resetting and reseeding](#resetting-and-reseeding) | when the database is in a bad state |
-| [Regenerating the seed file](#regenerating-the-seed-file) | if the dataset changes |
-| [Scripts](#scripts) | the full `package.json` table |
-| [Before you commit](#before-you-commit) | the CI gates |
+## Running it
 
----
-
-## Run it
-
-SQLite is the default and needs no setup: `database.db` ships seeded, in the repository.
+From the repository root, not from here:
 
 ```bash
-cd backend
-cp .env.example .env    # DATABASE=sqlite3
-npm install
-npm run dev
+make up              # the whole stack
+make logs-backend    # follow this service
+make restart-backend # reload after an edit — bun --hot does not work over the mount
+make psql            # a shell on the database
 ```
 
-`App listening at port 3000`. Open <http://localhost:3000/graphql> for GraphiQL.
+To run the backend on the host instead, with working hot reload (needs Bun ≥ 1.2):
 
-`npm run dev` is `nodemon` watching `**/*.ts` and re-executing through `tsx`. There is no
-compile step — the TypeScript runs directly.
+```bash
+make dev-backend
+```
 
----
+## Layout
+
+```
+src/
+├── index.ts     entry point — port and fetch handler
+├── app.ts       the chained route declarations, validators, CORS, error handler.
+│                Exports AppType, which is what the frontend types itself against
+├── queries.ts   every SQL statement in the project
+├── cache.ts     GET-only response cache, router-level invalidation
+├── db.ts        the one Bun.sql handle
+├── env.ts       required configuration, validated at startup
+└── errors.ts    ApiError and the single error body shape
+db/
+├── 01-schema.sql  tables, constraints, indexes
+└── 02-seed.sql    generated — do not edit by hand
+build/
+├── beers.csv, breweries.csv   the source data
+└── generate-seed.ts           regenerates 02-seed.sql (`make seed`)
+tests/
+├── setup.ts       builds a disposable beers_test database before any test imports
+└── api.test.ts    30 route-contract tests
+```
 
 ## Configuration
 
-`db.ts` calls `dotenv`'s `config()` and then makes one decision:
+| Variable            | Required | Default                 | Notes                                      |
+| ------------------- | -------- | ----------------------- | ------------------------------------------ |
+| `DATABASE_URL`      | **yes**  | —                       | the process exits at startup naming it if unset |
+| `CORS_ORIGINS`      | no       | `http://localhost:5173` | comma-separated allowlist; never a wildcard |
+| `PORT`              | no       | `3000`                  |                                            |
+| `CACHE_TTL_SECONDS` | no       | `300`                   | GET responses only                          |
+| `STATIC_DIR`        | no       | unset                   | set only in the production image, where the API also serves the bundle |
 
-```ts
-process.env.DATABASE === "sqlite3"  ?  open ./database.db  :  connect to MySQL
+Under compose these come from `compose.yaml`; `backend/.env` only needs to exist.
+
+## API reference
+
+All paths are under `/api`. Reads are `GET`; anything that changes state is not.
+
+Identity is the `X-User-Id` header — a client-supplied UUID, **not authentication**.
+Reads work without it, with per-user fields returning `unreact`.
+
+### Reads
+
+#### `GET /api/beers`
+
+The catalogue, filtered, sorted and paginated.
+
+| Query      | Type                              | Default | Notes                          |
+| ---------- | --------------------------------- | ------- | ------------------------------ |
+| `size`     | int 1–100                         | `10`    | bounded, so no unbounded pages |
+| `start`    | int ≥ 0                           | `0`     | offset                         |
+| `sort`     | `top`\|`low`\|`atoz`\|`ztoa`      | `top`   | anything else is a 400         |
+| `search`   | string ≤ 200                      | `""`    | case-insensitive, substring    |
+| `minAbv` / `maxAbv` | number 0–100             | `0`/`13`| whole percentages              |
+| `minIbu` / `maxIbu` | number 0–1000            | `0`/`138`|                               |
+| `styles`   | repeated string                   | none    | `?styles=Altbier&styles=Cider` |
+
+```json
+{
+  "beers": [
+    { "beer_id": 1436, "beer_name": "Pub Beer", "brewery_name": "10 Barrel Brewing Company",
+      "vote_sum": 0, "reaction": "unreact" }
+  ],
+  "totalCount": 2410
+}
 ```
 
-**That comparison is exact, and the fallback is MySQL.** A missing `.env`, a typo, or
-`DATABASE=sqlite` all send you down the MySQL branch, where the connection fails against
-whatever is (or is not) listening on `localhost:3306`. If the backend starts and every
-query errors, check this first.
+`totalCount` is how many beers match the filters, returned once rather than repeated
+on every row as the old API did.
 
-| Variable | Meaning | Default in code |
-| --- | --- | --- |
-| `DATABASE` | `sqlite3` → the file database. Anything else, including unset → MySQL. | none |
-| `DB_HOST` | MySQL host | `localhost` |
-| `DB_PORT` | MySQL port | `3306` |
-| `DB_USER` | MySQL user | `user` |
-| `DB_PASS` | MySQL password | `""` |
-| `DB_NAME` | MySQL database | `beers` |
+#### `GET /api/beers/:id`
 
-The port `3000` is hardcoded in `server.ts`. CORS is `origin: "*"`.
+One beer with its aggregates. `404` if there is no such beer.
 
----
-
-## The API
-
-One endpoint, `POST /graphql`. Every operation — including the writes — is a field on
-`Query`; there is no `type Mutation`. Full argument and return-shape reference is in
-[`ARCHITECTURE.md § 2`](../ARCHITECTURE.md#2-the-graphql-surface).
-
-| | Fields |
-| --- | --- |
-| Read | `beers`, `beer`, `comments` |
-| Write | `loginOrSignUp`, `login`, `signUp`, `updateUser`, `deleteUser`, `react`, `comment`, `deleteComment` |
-
-**GraphiQL is enabled** (`graphiql: true` in `server.ts`) and is the fastest way to see
-what a resolver returns — which matters here, because every field is declared `scalar Any`
-and the schema tells you nothing about the response shape.
-
-```graphql
-{ beers(size: 5 start: 0 userId: "any-string" sort: "top") }
+```json
+{ "id": 1436, "name": "Pub Beer", "style": "American Pale Lager", "abv": 0.05,
+  "ibu": 0, "ounces": 12, "brewery_name": "10 Barrel Brewing Company",
+  "rating": 0, "vote_count": 0, "comment_count": 0, "user_vote": "unreact" }
 ```
 
-Two things to know before you rely on the output:
+`abv` is a fraction — 0.05 is 5%.
 
-- **`beer` returns a one-element array**, not an object. Every caller writes
-  `data.data.beer[0]`.
-- **A failed query returns the string `"Error in query"` where an array was expected**,
-  rather than raising a GraphQL error. `sqlQuery()` catches and stringifies. Some
-  resolvers check for it and throw; the read resolvers do not.
+#### `GET /api/beers/:id/comments`
 
-> **Do not expose this server to an untrusted network.** Every resolver builds its SQL by
-> string interpolation, with no bind parameters anywhere — see
-> [`ARCHITECTURE.md § 13`](../ARCHITECTURE.md#13-known-constraints). It is safe as local
-> coursework and unsafe as anything else.
+Newest first. `size` (1–100, default 10) and `start` (default 0).
 
----
+```json
+{ "comments": [ { "id": 1, "comment_text": "…", "created_at": "2026-09-06T…",
+                  "user_id": "…", "username": "alice" } ] }
+```
 
-## Running against MySQL
+#### `GET /api/styles`
 
-The deployed instance uses MySQL; SQLite is the local default. You need MySQL only if you
-are reproducing production behaviour or working on dialect-specific SQL.
+Every distinct style in the catalogue — 100 of them, including the empty string,
+which five beers have. The interface reaches those through its "Other" option, which
+is the complement of the styles it names individually. Returned deliberately; never
+render it as an option of its own.
 
-### With Docker Compose (from the repository root)
+```json
+{ "styles": ["", "Abbey Single Ale", "Altbier", "…"] }
+```
+
+#### `GET /api/session`
+
+The user the caller's `X-User-Id` belongs to. `404` if the header is missing or the
+id belongs to nobody. Backs the interface's route guard.
+
+```json
+{ "id": "…", "username": "alice" }
+```
+
+### Writes
+
+#### `POST /api/session`
+
+Sign in or sign up — the same call. Creates the user if the username is new, returns
+the existing one otherwise, so a second caller sending a different `uuid` for a
+taken username gets the original id back.
+
+```json
+// → { "username": "alice", "uuid": "<generated>" }
+// ← { "id": "…", "isNewUser": true }
+```
+
+#### `PATCH /api/users/:id`
+
+Rename. `409` if the username is taken, `404` if the user does not exist.
+
+```json
+// → { "username": "alice2" }   ← { "ok": true }
+```
+
+#### `DELETE /api/users/:id`
+
+Deletes the user, and by cascade their votes and comments. `404` if unknown.
+
+#### `PUT /api/beers/:id/reaction`
+
+Sets this user's vote. **Idempotent** — sending the same vote twice leaves one vote,
+and sending a different one replaces it. `PUT` rather than `POST` for that reason.
+
+```json
+// → { "action": "upvote" | "downvote" | "unreact" }   ← { "ok": true }
+```
+
+Requires `X-User-Id`. `400` for an unknown action, `404` for an unknown beer or user.
+
+#### `POST /api/beers/:id/comments`
+
+```json
+// → { "comment": "Best beer ever!" }   ← 201 { "id": 12 }
+```
+
+1–2000 characters, trimmed. Requires `X-User-Id`.
+
+#### `DELETE /api/comments/:id`
+
+Deletes a comment **you wrote**. `403` for someone else's, `404` if unknown.
+
+### Errors
+
+Status codes carry failure; a `200` never contains an error. Every failure has one
+shape:
+
+```json
+{ "error": { "message": "beer not found", "code": "not_found" } }
+```
+
+| Status | `code`              | When                                     |
+| ------ | ------------------- | ---------------------------------------- |
+| `400`  | `invalid_request`   | validation failed; the message names the fields |
+| `400`  | `identity_required` | a write arrived with no `X-User-Id`      |
+| `403`  | `forbidden`         | someone else's comment                   |
+| `404`  | `not_found`         | no such beer, user or comment            |
+| `409`  | `conflict`          | username already taken                   |
+| `500`  | `internal`          | anything unexpected                      |
+
+A `500` body is always the generic message. Driver text, SQL and stack traces are
+logged, never returned — there is a test that forces a real driver error and asserts
+none of it leaks.
+
+## Caching
+
+`GET` only, keyed on path + validated query + `X-User-Id`. Write responses are
+uncacheable by construction, and the caller being part of the key is what stops one
+user's `reaction` values reaching another.
+
+Invalidation is a middleware mounted on the router, not a call inside each handler.
+**A mutating route you add tomorrow invalidates correctly without you writing
+invalidation code.** A response served from cache carries `X-Cache: HIT`.
+
+## Database
+
+PostgreSQL 18, the only engine. `db/01-schema.sql` and `db/02-seed.sql` are applied
+by the postgres image from `/docker-entrypoint-initdb.d` on an **empty volume only**,
+so restarts never re-run them and never duplicate the catalogue.
+
+To change the schema, edit `01-schema.sql` and then `make reset` — which destroys
+local votes and comments.
+
+To regenerate the seed after changing the CSVs, `make seed`.
+
+All SQL lives in `src/queries.ts` and **every request-derived value is bound**. Two
+things there need care, both explained in the file and in
+[ARCHITECTURE § 6](../ARCHITECTURE.md#6-the-query-that-does-the-work):
+
+- the style filter is a delimiter-joined parameter split by `string_to_array`,
+  because `sql.unsafe()` will not bind a JS array as `text[]`;
+- the `ORDER BY` tiebreak is load-bearing and must not be removed.
+
+## Tests
 
 ```bash
-cp .env.example .env         # ROOT_PASS, DB_NAME
-docker compose up --build
+make test-backend
 ```
 
-MariaDB 10.4 comes up with `backend/database-seed.sql` mounted into
-`/docker-entrypoint-initdb.d/`, so it seeds itself on first boot.
+30 tests through Hono's `app.request()`, so nothing binds a port and the suite can
+run alongside a dev stack. `tests/setup.ts` creates a throwaway `beers_test`
+database from `db/*.sql` before any test file is imported.
 
-> **Known issue:** the `backend` service in `compose.yaml` has no `env_file`. `DATABASE`
-> is therefore unset inside the container, `db.ts` takes the MySQL branch, and `DB_HOST`
-> falls back to `localhost` — which is the backend container itself, not `mysqldb`. Add
-> this to the `backend` service to make it work:
->
-> ```yaml
->     env_file:
->       - ./backend/.env      # containing DB_HOST=mysqldb
-> ```
+Coverage is the route contract, the error shape, cache behaviour, idempotent voting,
+comment ownership, pagination totality and four SQL-injection attempts.
 
-### Installing MySQL directly
-
-```bash
-brew install mysql          # macOS
-sudo apt-get install mysql-server   # debian/ubuntu
-# windows: https://dev.mysql.com/downloads/installer/
-```
-
-Start it (`brew services start mysql`, `sudo service mysql start`, or `mysqld start`),
-then create the credentials the defaults expect:
-
-```sql
--- in `sudo mysql` (or `sudo mysql -u root -p`)
-CREATE USER 'user'@'localhost' IDENTIFIED BY 'Password12345678*';
-GRANT ALL PRIVILEGES ON *.* TO 'user'@'localhost';
-FLUSH PRIVILEGES;
-```
-
-Then seed the schema and data — `database-seed.sql` begins with `DROP DATABASE IF EXISTS
-beers; CREATE DATABASE beers; USE beers;`, so it is self-contained:
-
-```sql
-source ./database-seed.sql;
-exit;
-```
-
-Point `backend/.env` at it (`DATABASE=mysql`, plus the credentials above) and
-`npm run dev`.
-
-*If `CREATE USER` fails because the user exists, use `ALTER USER` instead. If the grant
-still will not let you connect, fall back to the `root` account and set `DB_USER=root`.*
-
----
-
-## Resetting and reseeding
-
-**SQLite.** `database.db` is committed, so a reset is either a checkout or a rebuild:
-
-```bash
-# discard local votes and comments, restore the committed database
-git checkout -- database.db
-
-# or rebuild from the seed file
-rm database.db
-sqlite3 database.db < database-seed.sql
-```
-
-The rebuild needs two edits to `database-seed.sql` first, because the file is written for
-MySQL: comment out the leading `DROP DATABASE` / `CREATE DATABASE` / `USE` block, and swap
-`AUTO_INCREMENT` for `AUTOINCREMENT` in the two `PRIMARY KEY` columns. Both alternatives
-are already present in `build/tables.sql` as comments.
-
-That `database.db` is tracked at all is a wart — it conflicts on merge and carries
-whatever data the last committer had. It is also why the quickstart has no seeding step.
-
-**MySQL.** `source ./database-seed.sql;` in the console. The file drops and recreates the
-database, so this is a full reset.
-
----
-
-## Regenerating the seed file
-
-Only needed if `build/beers.csv` or `build/breweries.csv` changes.
-
-```bash
-npm run build:seedfile
-```
-
-`build/createSeedFile.js` truncates `database-seed.sql`, writes `build/tables.sql`, then
-streams both CSVs into two multi-row `INSERT` statements, doubling `'` to escape it.
-
-Two things to check in the output:
-
-- **Block order is not deterministic.** The two CSV streams finish independently, so the
-  `beers` block can land before `breweries` — which `beers.brewery_id` references. Neither
-  MySQL nor SQLite rejects it by default, but if a load ever fails on a foreign key, this
-  is why.
-- **Missing measurements become `0`, not `NULL`** (`row.abv ? row.abv : 0`). That is where
-  the 1,005 fabricated IBU zeroes and 62 fabricated ABV zeroes come from — see
-  [README § The data](../README.md#the-data).
-
----
-
-## Scripts
-
-| Command | What it does |
-| --- | --- |
-| `npm run dev` | `nodemon` + `tsx`, restarting on any `.ts` change |
-| `npm start` | The server once, through `tsx`, no watcher |
-| `npm run build` | `tsc` → `dist/`. Nothing in the repository consumes the output |
-| `npm run build:seedfile` | Regenerate `database-seed.sql` from the CSVs |
-| `npm run lint` | ESLint, `--max-warnings 0` |
-| `npm run prettier:check` | Formatting check — a CI gate |
-| `npm run prettier:write` | Apply formatting |
-
-**`start-backend.sh` and `wait-for-database.sh` are dead.** Nothing invokes either. The
-first installs nvm and runs `dist/server.js`, and its final line is a stray markdown code
-fence that makes it a syntax error. The second polls *Postgres*, left over from the
-containerised design that was abandoned when the VM turned out not to run Docker.
-
----
-
-## Before you commit
-
-```bash
-npm run lint && npm run prettier:check
-```
-
-Both run in CI on every merge request. There are no backend tests — the resolvers are
-exercised only through the frontend's Playwright suite, which is a real gap and the
-easiest one to close ([`ARCHITECTURE.md § 15`](../ARCHITECTURE.md#15-where-a-change-attaches)).
+**There is no other automated check on this package.** If you change a query and do
+not add a test, nothing verified it.

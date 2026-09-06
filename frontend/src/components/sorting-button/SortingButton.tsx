@@ -2,7 +2,7 @@ import { SortDescendingOutlined } from "@ant-design/icons";
 import { Dropdown, Button } from "antd";
 import { useContext } from "react";
 import { FilterContext } from "../../context/FilterContext";
-import { SortingItem } from "../../types/types";
+import type { SortingItem } from "../../types/types";
 
 /**
  * This component is used as a more mobile friendly

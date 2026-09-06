@@ -1,189 +1,146 @@
 # BeerBuddy frontend
 
-React 18 + TypeScript + Vite, on `:5173`. Four routes, one context, no GraphQL client —
-every request is a hand-built template string passed to `fetch`.
+React 19 + Vite 8, TypeScript 6, Ant Design 5 (plus MUI for one component).
 
-For the design — routing, state, the fetch triggers, the responsive strategy — see
-[`../ARCHITECTURE.md § 8`](../ARCHITECTURE.md#8-frontend-structure).
+## Running it
 
-| | |
-| --- | --- |
-| [Run it](#run-it) | two commands, plus the one file people forget |
-| [Configuration](#configuration) | `VITE_APP_BACKEND_URL`, and what happens without it |
-| [Structure](#structure) | where things live |
-| [Testing](#testing) | the unit suite, the e2e suite, and how they differ |
-| [Coverage](#coverage) | |
-| [Scripts](#scripts) | the full `package.json` table |
-| [Before you commit](#before-you-commit) | the CI gates |
-
----
-
-## Run it
+From the repository root:
 
 ```bash
-cd frontend
-cp .env.example .env    # ← do not skip this
-npm install
-npm run dev
+make up             # the whole stack; interface on :5173
+make test-frontend  # 85 unit tests
+make logs           # follow
 ```
 
-The dev server listens on **`http://localhost:5173`** with `host: true`, so it is also
-reachable from other devices on your network.
+Vite hot-reloads inside the container — `vite.config.ts` sets
+`server.watch.usePolling`, because podman bind mounts on macOS do not deliver the
+filesystem events the default watcher listens for.
 
-You need a backend running — [`../backend/README.md`](../backend/README.md) — or a
-`VITE_APP_BACKEND_URL` pointed at the deployed one.
+## Talking to the API
 
----
+**Every request goes through `src/api/client.ts`.** There are no `fetch` calls
+anywhere else, and no request strings built by hand.
 
-## Configuration
+```ts
+import { fetchBeers, setReaction } from "../api/client";
 
-One variable, and the application does not work without it.
+const page = await fetchBeers({ size: 10, start: 0, sort: "top", ... });
+await setReaction(beerId, "upvote");
+```
 
-| Variable | Meaning | Local value |
-| --- | --- | --- |
-| `VITE_APP_BACKEND_URL` | The full GraphQL endpoint URL, interpolated into every `fetch` in the app | `http://localhost:3000/graphql` |
+The client is typed from the backend's own route definitions:
 
-**`.env` is gitignored and is not created for you.** Without it,
-`import.meta.env.VITE_APP_BACKEND_URL` is `undefined`, every call becomes
-`fetch(undefined)`, and the interface fails with network errors that say nothing about the
-cause. Copy `.env.example` first. Vite only exposes `VITE_`-prefixed names to the bundle,
-and it reads them at **build** time — restart the dev server after changing the file.
+```ts
+import type { AppType } from "../../../backend/src/app.ts";
+const client = hc<AppType>(import.meta.env.VITE_APP_BACKEND_URL, { ... });
+```
 
-To develop against the deployed backend instead of a local one, set
-`VITE_APP_BACKEND_URL=http://it2810-15.idi.ntnu.no:3000/graphql`. That needs the NTNU
-network or VPN, and it writes to the shared production database.
+That import is type-only and erased at build time, so nothing from the backend ends
+up in the bundle. What it buys is that **a change to a backend response breaks
+`bun run build` here**, naming the component that read the old field — instead of
+failing at runtime as `undefined`.
 
----
+Two consequences worth knowing:
 
-## Structure
+- **Type-checking this package needs the backend's source and `node_modules`.** The
+  Makefile and the production Dockerfile both mount the whole repository. Mounting
+  only `frontend/` makes `AppType` resolve to nothing and collapses every response
+  type to `unknown`.
+- **`src/types/types.ts` is derived, not written.** `Beer`, `BeerListItem`,
+  `Comment` and `ReactionType` come from the client's inferred return types. To
+  change one, change the backend query it comes from.
+
+Failures throw. The API signals them with status codes, so calls use `try`/`catch`
+rather than inspecting return values for an error string.
+
+### Identity
+
+`localStorage.userIdBeerBuddy` is sent as `X-User-Id` on every request, added by the
+client. It is a UUID this browser generated — it identifies you, it does not
+authenticate you.
+
+## Layout
 
 ```
 src/
-  main.tsx          routes + the Ant Design dark theme tokens, configured once
-  pages/            App (catalogue) · Beer (detail) · LogIn · FallbackPage (404)
-  components/       one directory each: Component.tsx, .module.css, .test.tsx, __snapshots__/
-  context/          FilterContext — search, IBU, ABV, styles, sorting. The only shared state
-  utils/            useFetchMoreBeers · useFetchBeer · useWindowDimensions · protectRoute
-  types/            Beer, SortingItem — partially adopted; several components redeclare these
-tests/              the Playwright suite
-public/             SVG icons only, no raster images
+├── api/client.ts        the typed caller — every request
+├── components/          one directory per component:
+│                        Component.tsx, Component.module.css,
+│                        Component.test.tsx, __snapshots__/
+├── context/             FilterContext — filters, sorting, and the style list
+├── pages/               App (catalogue), Beer, LogIn, FallbackPage
+├── utils/
+│   ├── beerStyles.ts        the 15 named styles and how "Other" expands
+│   ├── useFetchBeer.tsx     one beer
+│   ├── useFetchMoreBeers.tsx  the catalogue, paginated
+│   ├── protectRoute.tsx     route guard
+│   └── useWindowDimensions.tsx
+├── types/types.ts       derived from the client
+├── vitest-setup.ts      jest-axe matcher, jsdom matchMedia stub
+└── vitest.d.ts          the matcher's Vitest type
+tests/                   Playwright
 ```
 
-Styling is CSS Modules per component, plus `ant-design-overrides.css` for the handful of
-library internals the theme tokens cannot reach. Colours come from the `ConfigProvider` in
-`main.tsx`, so components rarely set them.
+## Conventions
 
-**Responsiveness is done in JavaScript, not CSS.** `useWindowDimensions()` returns live
-dimensions and components branch on them — different component trees at `768` and `1000`
-pixels, not different styles. Consequences are in
-[`ARCHITECTURE.md § 8`](../ARCHITECTURE.md#8-frontend-structure).
+- **One directory per component**, holding the component, its CSS Module, its test
+  and its snapshots. Follow it for anything new.
+- **CSS Modules per component.** Colours come from the Ant Design theme tokens in
+  `main.tsx`, not from component styles. `ant-design-overrides.css` is for library
+  internals the tokens cannot reach — a last resort.
+- **Responsiveness is JavaScript**, via `useWindowDimensions()`, branching at 768 and
+  1000 px. Match that rather than mixing in media queries. The breakpoints are magic
+  numbers duplicated across files; a seventh copy is the moment to extract a
+  constant.
+- **State is `FilterContext` plus local `useState`.** No Redux, no query cache, no
+  normalised store, for four screens.
+- **JSDoc on exported functions and components.** The existing code is consistent
+  about it.
 
----
+## The two component libraries
 
-## Testing
+Ant Design does everything except the ABV and IBU sliders, which are MUI's.
 
-Two suites with very different properties. Know which one you are running.
+**This is deliberate and MUI must not be removed.** Ant Design's `Slider` failed the
+accessibility audit under Firefox Accessibility, WAVE and aXe. See
+[`docs/accessibility.md`](../docs/accessibility.md#material-ui-components) — removing
+it requires demonstrating a replacement that passes the axe assertions first.
 
-| | `npm run test:vitest` | `npm run test:e2e` |
-| --- | --- | --- |
-| What | 84 unit tests, 17 files | 7 journeys × chromium/firefox/webkit |
-| Needs a backend | no | **the deployed one** |
-| Needs the NTNU VPN | no | **yes** |
-| Runtime | seconds | ~1.5 min |
-| Isolated | yes | **no — writes to the production database** |
-| Run it | constantly | deliberately |
+Ant Design stays on the 5 line. antd 6 supports React 19 natively but is a breaking
+major; 5.29 works here because every `message` call goes through `App.useApp()`
+rather than the static API React 19 breaks, so no compatibility patch is needed.
 
-### Unit tests
+## Beer styles
+
+The filter panel names 15 styles individually and offers **Other**. "Other" expands
+to the complement — every style `GET /api/styles` reports that is not one of the 15 —
+computed in `utils/beerStyles.ts`.
+
+This used to be 15 names here and 85 in the backend, which together had to cover
+exactly the 100 distinct styles in the data with nothing enforcing it; editing either
+made a style unreachable in the interface. The complement cannot drift.
+
+`""` is one of those 100 — five beers have no style — so it stays in the complement
+and is never rendered as its own checkbox. `"Other"` is also a real style name in the
+dataset as well as the label, so ticking it matches both.
+
+## Tests
 
 ```bash
-npm run test:vitest
+make test-frontend   # 85 tests
+make test-e2e        # Playwright against a disposable local stack
 ```
 
-Vitest + jsdom + `@testing-library/react`. Render-plus-snapshot, with `vitest-axe`
-assertions layered in — **an accessibility regression fails the test suite**, which is how
-the accessibility work in [`../docs/accessibility.md`](../docs/accessibility.md) stays
-enforced rather than aspirational.
+Unit tests are render, snapshot and `jest-axe`. **Accessibility failures are test
+failures** — all of them pass; when one does not, read the violation rather than
+reaching for `-u`.
 
-Snapshots make this suite good at catching unintended markup changes and weak at catching
-wrong behaviour: a component that consistently renders the wrong data keeps passing. When
-a snapshot fails, read the diff before running `-u`.
+The suite is render-plus-snapshot, which is good at catching markup change and weak
+at catching wrong behaviour. A passing snapshot proves less than it looks like.
 
-This is the suite CI runs, and the only one worth running on every change.
+Components are unit-tested against a mocked `api/client`, not a mocked `fetch` —
+`vi.mock("../../api/client", ...)`.
 
-### End-to-end tests
-
-```bash
-npx playwright install     # once
-npm run test:e2e
-```
-
-Covers login, the beer page, voting, commenting, search, sorting and style filtering, in
-three browsers.
-
-**These tests drive `http://it2810-15.idi.ntnu.no/project2` — the deployed site — and
-write to the shared production database.** The URLs are hardcoded in
-`tests/beerbuddy.spec.ts`; there is no `baseURL` and no local `webServer`. That single
-fact explains everything below:
-
-- **VPN required.** No local setup substitutes.
-- **Two people running it at once will interfere.** Same database, same test usernames.
-- **Aborting a run leaks data.** Cleanup (`deleteUser`) is the last step, so a cancelled
-  run leaves test users and comments behind.
-- **A slow VM looks exactly like a broken assertion.** `retries: 2` absorbs most of it; if
-  a run fails once, re-running it is a reasonable first response rather than a cover-up.
-
-Variants:
-
-```bash
-npm run test:headed     # chromium only, visible browser, 500 ms per step — for debugging
-npm run test:parallel   # 2 workers. Faster, and not recommended: the VM struggles
-npm run test            # test:vitest, then test:e2e
-```
-
-If Playwright itself misbehaves, confirm the browsers are installed
-(`npx playwright install`) before looking further —
-[docs](https://playwright.dev/docs/intro).
-
-![Playwright terminal output listing the login, beer-page, vote, comment, search, sorting and style-filtering tests passing across chromium, firefox and webkit](tests/testResults.png)
-
----
-
-## Coverage
-
-```bash
-npm run coverage
-```
-
-`@vitest/coverage-v8`, printed to the terminal and written as HTML to `coverage/`. Open
-`coverage/index.html` for the browsable report. `coverage/` is gitignored.
-
----
-
-## Scripts
-
-| Command | What it does |
-| --- | --- |
-| `npm run dev` | Vite dev server on `:5173`, LAN-reachable |
-| `npm run build` | `tsc && vite build` → `dist/`. Type errors fail the build |
-| `npm run preview` | Serve the built `dist/` — the closest local match to production |
-| `npm run test` | `test:vitest` then `test:e2e` (needs the VPN) |
-| `npm run test:vitest` | The 84 unit tests |
-| `npm run test:e2e` | The 7 journeys in three browsers |
-| `npm run test:headed` | The same, chromium only, visible, slowed down |
-| `npm run test:parallel` | Two workers — not recommended |
-| `npm run coverage` | Coverage to terminal and `coverage/` |
-| `npm run lint` | ESLint, `--max-warnings 0` |
-| `npm run prettier` | Apply formatting |
-| `npm run prettier:check` | Formatting check — a CI gate |
-
----
-
-## Before you commit
-
-The same four gates CI runs on every merge request:
-
-```bash
-npm run lint && npm run prettier:check && npm run test:vitest && npm run build
-```
-
-CI never runs the e2e suite.
+Playwright drives a stack `make test-e2e` starts on its own ports and destroys
+afterwards. It needs no VPN and touches no shared database. Running it directly needs
+host Bun and `bunx playwright install`.

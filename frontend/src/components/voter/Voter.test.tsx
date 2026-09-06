@@ -1,27 +1,19 @@
-import { describe, it, expect, vi, Mock } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { act, render, screen } from "@testing-library/react";
 import Voter from "./Voter";
 import { axe } from "jest-axe";
 
-const mockData = {
-  data: {
-    react: {
-      vote_sum: 10,
-      reaction: "unreact",
-    },
-  },
-};
+// Voter talks to the API through the typed client, not fetch, so that is what a
+// unit test replaces.
+vi.mock("../../api/client", () => ({ setReaction: vi.fn(async () => {}) }));
+vi.mock("../../utils/protectRoute", () => ({
+  default: vi.fn(async () => false),
+}));
 
-global.window.location = {
-  ...global.window.location,
-  replace: vi.fn(() => {}),
-};
-
-global.fetch = vi.fn(() =>
-  Promise.resolve({
-    json: () => Promise.resolve(mockData),
-  })
-) as Mock;
+Object.defineProperty(global.window, "location", {
+  writable: true,
+  value: { ...global.window.location, replace: vi.fn() },
+});
 
 describe("Voter", () => {
   it("is accessible", async () => {

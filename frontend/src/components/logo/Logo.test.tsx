@@ -24,7 +24,7 @@ describe("Logo", () => {
   it("renders with correct link", () => {
     const { getByRole } = render(<Logo />);
     expect(getByRole("link")).toBeInTheDocument();
-    expect(getByRole("link")).toHaveAttribute("href", "/project2");
+    expect(getByRole("link")).toHaveAttribute("href", "/");
   });
 
   it("renders with correct style", () => {

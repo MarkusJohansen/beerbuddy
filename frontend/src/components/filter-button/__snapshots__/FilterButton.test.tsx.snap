@@ -3,11 +3,11 @@
 exports[`FilterButton > renders correctly 1`] = `
 <div>
   <div
-    class="_filterButtonWrapper_1f5523"
+    class="_filterButtonWrapper_63327a"
   >
     <button
       aria-label="Filter button"
-      class="ant-btn css-dev-only-do-not-override-pr0fja ant-btn-primary ant-btn-icon-only"
+      class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid ant-btn-icon-only"
       type="button"
     >
       <span

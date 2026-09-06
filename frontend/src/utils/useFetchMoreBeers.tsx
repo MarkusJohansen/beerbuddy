@@ -1,28 +1,34 @@
 import { useContext, useState } from "react";
-import { FilterContext } from "../context/FilterContext";
 
-type ReactionType = "unreact" | "upvote" | "downvote";
-interface Beer {
-  beer_id: number;
-  beer_name: string;
-  brewery_name: string;
-  vote_sum: number;
-  beer_count: number;
-  reaction: ReactionType;
-}
+import { fetchBeers, type Sort } from "../api/client";
+import { FilterContext } from "../context/FilterContext";
+import { expandStyles } from "./beerStyles";
+import type { BeerListItem } from "../types/types";
+
+const PAGE_SIZE = 10;
+
+/** Filter values used when the user clears every filter. */
+const NO_FILTERS = {
+  search: "",
+  sort: "top" as Sort,
+  minAbv: 0,
+  maxAbv: 13,
+  minIbu: 0,
+  maxIbu: 138,
+  styles: [] as string[],
+};
 
 /**
- * Custom hook for fetching more beers from the backend.
- * @param fetchSize - The number of beers to fetch per request.
- * @returns An object containing an array of beers and a function to fetch more beers.
+ * Custom hook for fetching pages of beers.
+ * @returns the beers loaded so far, the catalogue total, and a fetcher for more
  */
 const useFetchMoreBeers = () => {
-  const { searchString, IBU, ABV, styles, sorting } = useContext(FilterContext);
-  const [beers, setBeers] = useState<Beer[]>([]);
-  const userId = localStorage.getItem("userIdBeerBuddy");
+  const { searchString, IBU, ABV, styles, sorting, allStyles } =
+    useContext(FilterContext);
+  const [beers, setBeers] = useState<BeerListItem[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
 
   const fetchMore = async (reset?: boolean, noFilters?: boolean) => {
-    // If reset is true, we want to remember the filters in localStorage.
     if (reset) {
       localStorage.setItem("searchString", searchString);
       localStorage.setItem("IBU", JSON.stringify(IBU));
@@ -38,40 +44,33 @@ const useFetchMoreBeers = () => {
       localStorage.setItem("sorting", "top");
     }
 
-    await fetch(import.meta.env.VITE_APP_BACKEND_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        query: `{ 
-          beers(
-            size: 10
-            start: ${reset ? 0 : beers.length}
-            userId: "${userId}"
-            sort: "${noFilters ? "top" : sorting}" 
-            minAbv: ${noFilters ? 0 : ABV[0]}
-            maxAbv: ${noFilters ? 13 : ABV[1]}
-            minIbu: ${noFilters ? 0 : IBU[0]}
-            maxIbu: ${noFilters ? 138 : IBU[1]}
-            search: "${noFilters ? "" : searchString}"
-            styles: ${noFilters ? "[]" : JSON.stringify(styles)}
-          )
-        }`,
-      }),
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        setBeers(reset ? data.data.beers : [...beers, ...data.data.beers]);
-      });
+    const filters = noFilters
+      ? NO_FILTERS
+      : {
+          search: searchString,
+          sort: sorting as Sort,
+          minAbv: ABV[0],
+          maxAbv: ABV[1],
+          minIbu: IBU[0],
+          maxIbu: IBU[1],
+          // "Other" means every style not named in the panel. The backend used to
+          // hold that list; it is now derived from what the catalogue contains.
+          styles: expandStyles(styles, allStyles),
+        };
 
-    reset
-      ? document.getElementById("infiniteScrollTarget")?.scrollTo(0, 0)
-      : null;
+    const page = await fetchBeers({
+      size: PAGE_SIZE,
+      start: reset ? 0 : beers.length,
+      ...filters,
+    });
+
+    setBeers(reset ? page.beers : [...beers, ...page.beers]);
+    setTotalCount(page.totalCount);
+
+    if (reset) document.getElementById("infiniteScrollTarget")?.scrollTo(0, 0);
   };
 
-  return { beers, fetchMore };
+  return { beers, totalCount, fetchMore };
 };
 
 export default useFetchMoreBeers;
