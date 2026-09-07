@@ -4,25 +4,27 @@ exports[`UserIntro > renders correctly 1`] = `
 <div>
   <header
     aria-label="User intro"
-    class="_headingWrapper_c8bfa2"
+    class="flex items-center justify-between gap-md"
   >
     <h1
-      class="_heading_c8bfa2"
+      class="m-0 font-display text-2xl leading-none tracking-[-0.02em] text-ink"
     >
-      <b>
-        Welcome
-      </b>
-      , 
-      Erik
+      Welcome
+      <span
+        class="text-ink-dim"
+      >
+        , 
+        Erik
+      </span>
     </h1>
     <img
       alt="Beer clinking Emoji"
-      class="_emoji_c8bfa2"
+      class="size-xl"
       src="/beerEmoji.svg"
     />
   </header>
   <hr
-    class="_separator_c8bfa2"
+    class="m-0 border-0 border-t border-rule"
   />
 </div>
 `;

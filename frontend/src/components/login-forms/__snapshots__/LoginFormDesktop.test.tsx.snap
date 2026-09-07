@@ -3,134 +3,82 @@
 exports[`LoginFormDesktop > matches snapshot 1`] = `
 <div>
   <main
-    class="_container_7d645a"
+    class="mx-auto flex min-h-screen max-w-4xl flex-col gap-3xl bg-ground px-2xl py-xl text-ink"
   >
     <header
-      class="_logoContainer_7d645a"
+      class="border-b border-rule pb-md"
     >
       <a
-        class="_wrapper_72d84d"
+        class="flex items-center gap-sm no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         href="/"
       >
         <img
           alt="BeerBuddy logo"
-          class="_icon_72d84d"
+          class="size-lg"
           src="/teku.svg"
         />
         <h1
-          class="_heading_72d84d"
+          class="m-0 font-display text-lg tracking-[-0.02em] text-ink"
         >
           BeerBuddy
         </h1>
       </a>
     </header>
     <div
-      class="_loginContainer_7d645a"
+      class="grid grid-cols-2 items-center gap-3xl"
     >
       <section
-        class="_loginText_7d645a"
+        class="flex flex-col gap-md"
       >
-        <h2>
-          Taste, Rate, Repeat -
-          <br />
-           
-          The craft beer journey
+        <h2
+          class="m-0 font-display text-2xl leading-tight tracking-[-0.02em] text-ink"
+        >
+          Taste, rate, repeat — the craft beer journey
         </h2>
-        <p>
-          Join the RateMyBrew community to unlock exclusive
-          <br />
-          features and be part of a global craft beer conversation.
+        <p
+          class="m-0 max-w-[46ch] text-base text-ink-dim"
+        >
+          Join the BeerBuddy community to unlock exclusive features and be part of a global craft beer conversation.
         </p>
       </section>
       <section
         aria-label="Login form"
-        class="_loginFormContainer_7d645a"
+        class="border border-rule p-lg"
       >
-        <div
-          class="ant-card ant-card-bordered css-dev-only-do-not-override-mncuj7"
-          style="height: 100%; background-color: rgb(230, 244, 255);"
+        <h1
+          class="m-0 mb-lg font-display text-lg text-ink"
+        >
+          Log in
+        </h1>
+        <form
+          autocomplete="off"
+          class="flex flex-col gap-lg"
         >
           <div
-            class="ant-card-body"
-            style="height: 100%;"
+            class="flex flex-col gap-xs"
           >
-            <h1>
-              Log in
-            </h1>
-            <form
-              autocomplete="off"
-              class="ant-form ant-form-vertical css-dev-only-do-not-override-mncuj7 _loginForm_7d645a"
-              id="basic"
+            <label
+              class="text-xs tracking-[0.1em] text-ink-mute uppercase"
+              for="username-desktop"
             >
-              <div
-                class="ant-form-item css-dev-only-do-not-override-mncuj7 ant-form-item-vertical"
-              >
-                <div
-                  class="ant-row ant-form-item-row css-dev-only-do-not-override-mncuj7"
-                >
-                  <div
-                    class="ant-col ant-form-item-label css-dev-only-do-not-override-mncuj7"
-                  >
-                    <label
-                      class="ant-form-item-required"
-                      for="basic_username"
-                      title="Username"
-                    >
-                      Username
-                    </label>
-                  </div>
-                  <div
-                    class="ant-col ant-form-item-control css-dev-only-do-not-override-mncuj7"
-                  >
-                    <div
-                      class="ant-form-item-control-input"
-                    >
-                      <div
-                        class="ant-form-item-control-input-content"
-                      >
-                        <input
-                          aria-required="true"
-                          class="ant-input css-dev-only-do-not-override-mncuj7 ant-input-outlined"
-                          id="basic_username"
-                          type="text"
-                          value=""
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div
-                class="ant-form-item css-dev-only-do-not-override-mncuj7 ant-form-item-vertical"
-              >
-                <div
-                  class="ant-row ant-form-item-row css-dev-only-do-not-override-mncuj7"
-                >
-                  <div
-                    class="ant-col ant-form-item-control css-dev-only-do-not-override-mncuj7"
-                  >
-                    <div
-                      class="ant-form-item-control-input"
-                    >
-                      <div
-                        class="ant-form-item-control-input-content"
-                      >
-                        <button
-                          class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid _loginButton_7d645a"
-                          type="submit"
-                        >
-                          <span>
-                            Submit
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </form>
+              Username
+            </label>
+            <input
+              class="h-xl w-full min-w-0 rounded-none border-0 border-b border-rule-strong bg-transparent px-0 py-sm font-sans text-base text-ink transition-colors placeholder:text-ink-mute outline-none focus-visible:border-accent disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-accent aria-invalid:border-b-2"
+              data-slot="input"
+              id="username-desktop"
+              name="username"
+              required=""
+            />
           </div>
-        </div>
+          <button
+            class="inline-flex shrink-0 cursor-pointer items-center justify-center gap-sm rounded-none font-sans whitespace-nowrap transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-accent text-ground hover:bg-ink h-xl px-md text-base self-start"
+            data-slot="button"
+            type="submit"
+          >
+            Submit
+          </button>
+        </form>
       </section>
     </div>
   </main>

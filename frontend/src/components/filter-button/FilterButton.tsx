@@ -1,14 +1,15 @@
-import { FilterFilled } from "@ant-design/icons";
-import { Button, Modal } from "antd";
-import styles from "./FilterButton.module.css";
 import { useEffect, useState } from "react";
+import { SlidersHorizontal } from "lucide-react";
+import { Button } from "../ui/button";
+import Dialog from "../ui/dialog";
 import Filters from "../filters/Filters";
 import useWindowDimensions from "../../utils/useWindowDimensions";
+import { TABLET } from "../../utils/breakpoints";
 
 /**
  * The filter button component.
  * This is a more compact way of accessing the filters on mobile devices.
- * Contains a modal with the filters.
+ * Contains a dialog with the filters.
  * @param fetchMore - function that is called when the apply filters button is clicked
  * @returns - The filter button component.
  */
@@ -20,32 +21,29 @@ const FilterButton = ({
   const [showFilter, setShowFilter] = useState(false);
   const { width } = useWindowDimensions();
 
-  const handleClick = () => {
-    setShowFilter(!showFilter);
-  };
-
+  // Widening past the sidebar's breakpoint makes the dialog redundant.
   useEffect(() => {
-    if (width > 1000) {
-      setShowFilter(false);
-    }
+    if (width >= TABLET) setShowFilter(false);
   }, [width]);
 
   return (
-    <div className={styles.filterButtonWrapper}>
+    <div className="tablet:hidden">
       <Button
-        type="primary"
-        icon={<FilterFilled />}
-        onClick={handleClick}
-        aria-label="Filter button"
-      />
-      <Modal
+        variant="outline"
+        size="icon"
+        onClick={() => setShowFilter(true)}
+        aria-label="Filters"
+        aria-expanded={showFilter}
+      >
+        <SlidersHorizontal aria-hidden className="size-md" />
+      </Button>
+      <Dialog
         open={showFilter}
-        onCancel={handleClick}
-        footer={null}
-        width={1000}
+        onClose={() => setShowFilter(false)}
+        label="Filters"
       >
         <Filters fetchMore={fetchMore} apply={() => setShowFilter(false)} />
-      </Modal>
+      </Dialog>
     </div>
   );
 };

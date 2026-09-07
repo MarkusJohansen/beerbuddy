@@ -1,5 +1,4 @@
 import Voter from "../voter/Voter";
-import styles from "./BeerCard.module.css";
 
 type ReactionType = "unreact" | "upvote" | "downvote";
 
@@ -20,10 +19,10 @@ interface BeerCardInterface {
 }
 
 /**
- * A component for compactly displaying a beer in a list of beers
- * Works as a link to the beer page.
- * Displays the name, brewery and votes of the beer.
- * Contains a voter component for voting on the beer.
+ * One entry in the catalogue: a link to the beer page carrying its vote control.
+ *
+ * An entry is a row bounded by a hairline rather than a filled card — the whole
+ * list reads as a set of records that way, which is what a catalogue is.
  * @param props : BeerCardInterface - The interface for the BeerCard component.
  * @returns  - The beer card component.
  */
@@ -32,11 +31,13 @@ const BeerCard = (props: BeerCardInterface) => {
     <a
       href={`./beer/${props.beer_id}`}
       aria-label={props.name}
-      className={styles.card}
+      className="group flex items-center justify-between gap-md border-b border-rule py-md transition-colors hover:border-rule-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
-      <div className={styles.textWrapper}>
-        <h1 className={styles.beerName}>{props.name}</h1>
-        <p className={styles.breweryName}>{props.brewery}</p>
+      <div className="flex flex-col gap-xs">
+        <h2 className="m-0 font-display text-lg leading-tight text-ink transition-colors group-hover:text-accent">
+          {props.name}
+        </h2>
+        <p className="m-0 text-xs text-ink-mute">{props.brewery}</p>
       </div>
       <Voter
         votes={props.votes}

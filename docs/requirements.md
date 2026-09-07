@@ -54,7 +54,7 @@ We have a custom GraphQL backend with a SQLite or MySQL database depending on th
 
 > Use of good and relevant components and libraries (free choice and we encourage as much reuse of third-party solutions as possible).
 
-Yes, we are using Antd and Material UI for styling. Seen in the [Readme](../README.md#tech-stack-and-why).
+Yes — Tailwind CSS with shadcn/ui components vendored as source. Seen in the [Readme](../README.md#tech-stack-and-why).
 
 ## Testing, development and Quality control Requirements
 

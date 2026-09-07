@@ -1,7 +1,7 @@
 import emoji from "/beerEmoji.svg";
 import useWindowDimensions from "../../utils/useWindowDimensions";
+import { TABLET } from "../../utils/breakpoints";
 import Logo from "../logo/Logo";
-import styles from "./UserIntro.module.css";
 
 /**
  * UserIntro component that greets a logged in user with their username.
@@ -9,29 +9,32 @@ import styles from "./UserIntro.module.css";
  */
 const UserIntro = () => {
   const { width } = useWindowDimensions();
-  if (width < 1000) {
+
+  if (width < TABLET) {
     return (
       <>
-        <header className={styles.headingWrapper}>
+        <header className="flex items-center">
           <Logo />
         </header>
-        <hr className={styles.separator} />
+        <hr className="m-0 border-0 border-t border-rule" />
       </>
     );
   }
+
+  const name = localStorage.getItem("userNameBeerBuddy") ?? "";
+
   return (
     <>
-      <header className={styles.headingWrapper} aria-label="User intro">
-        <h1 className={styles.heading}>
-          <b>Welcome</b>
-          {", "}
-          {localStorage.getItem("userNameBeerBuddy")
-            ? localStorage.getItem("userNameBeerBuddy")
-            : ""}
+      <header
+        aria-label="User intro"
+        className="flex items-center justify-between gap-md"
+      >
+        <h1 className="m-0 font-display text-2xl leading-none tracking-[-0.02em] text-ink">
+          Welcome{name && <span className="text-ink-dim">, {name}</span>}
         </h1>
-        <img className={styles.emoji} src={emoji} alt="Beer clinking Emoji" />
+        <img className="size-xl" src={emoji} alt="Beer clinking Emoji" />
       </header>
-      <hr className={styles.separator} />
+      <hr className="m-0 border-0 border-t border-rule" />
     </>
   );
 };

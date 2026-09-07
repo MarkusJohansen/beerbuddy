@@ -1,9 +1,13 @@
-import { Button, Input, Spin, App } from "antd";
-import styles from "./CommentBar.module.css";
 import { useId, useState } from "react";
 import { useParams } from "react-router-dom";
+import { SendHorizontal } from "lucide-react";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import Spinner from "../ui/spinner";
+import { useToast } from "../ui/use-toast";
 import protectRoute from "../../utils/protectRoute";
 import useWindowDimensions from "../../utils/useWindowDimensions";
+import { MOBILE } from "../../utils/breakpoints";
 import { addComment } from "../../api/client";
 
 interface CommentBarInterface {
@@ -36,14 +40,14 @@ const postComment = async (beerId: string, comment: string) => {
 const CommentBar = ({ onSuccess }: CommentBarInterface) => {
   const { id } = useParams<{ id: string }>();
   const [commentText, setCommentText] = useState("");
-  const { message } = App.useApp();
+  const toast = useToast();
   const { width } = useWindowDimensions();
   const inputId = useId();
 
   if (id === undefined)
     return (
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <Spin size="default" />
+      <div className="flex justify-center py-md">
+        <Spinner label="Loading comment box" />
       </div>
     );
 
@@ -60,7 +64,7 @@ const CommentBar = ({ onSuccess }: CommentBarInterface) => {
     const onlySpecialCharsRegex = /^[^a-zA-Z0-9]+$/;
 
     if (!(commentRegex.test(comment) && !onlySpecialCharsRegex.test(comment))) {
-      message.error("Your comment is invalid.");
+      toast.error("Your comment is invalid.");
       return false;
     }
     return true;
@@ -78,55 +82,54 @@ const CommentBar = ({ onSuccess }: CommentBarInterface) => {
     }
     const response = await postComment(id, commentText);
     if (response === "Error") {
-      message.error("There was a problem posting your comment.");
+      toast.error("There was a problem posting your comment.");
       return;
     }
-    message.success("Comment posted.");
+    toast.success("Comment posted.");
     setCommentText("");
     onSuccess();
   };
 
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.divider} />
-      <section className={styles.container} aria-label="Post a comment">
-        <div className={styles.labelContainer}>
-          <label htmlFor={inputId}>Comment</label>
-          <Input
-            id={inputId}
-            placeholder="Best beer ever!"
-            className={styles.inputField}
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            onKeyDown={(e) => {
-              /* When you press Enter with focus on input, you post */
-              if (e.key === "Enter") {
-                handleComment();
-              }
-            }}
-          />
-        </div>
-        {width > 768 ? (
-          <Button
-            type="primary"
-            className={styles.submitButton}
-            /* When clicking on post button, you post */
-            onClick={handleComment}
-          >
-            Comment
-          </Button>
+    <section
+      aria-label="Post a comment"
+      className="flex items-end gap-md border-t border-rule pt-md"
+    >
+      <div className="flex flex-1 flex-col gap-xs">
+        <label
+          htmlFor={inputId}
+          className="text-xs tracking-[0.1em] text-ink-mute uppercase"
+        >
+          Comment
+        </label>
+        <Input
+          id={inputId}
+          placeholder="Best beer ever!"
+          value={commentText}
+          onChange={(e) => setCommentText(e.target.value)}
+          onKeyDown={(e) => {
+            /* When you press Enter with focus on input, you post */
+            if (e.key === "Enter") {
+              handleComment();
+            }
+          }}
+        />
+      </div>
+      {/* The icon variant used to have no click handler at all, so a comment
+          could not be posted by tapping below 768 px. */}
+      <Button
+        variant="primary"
+        size={width > MOBILE ? "default" : "icon"}
+        onClick={handleComment}
+        aria-label={width > MOBILE ? undefined : "Post comment"}
+      >
+        {width > MOBILE ? (
+          "Comment"
         ) : (
-          <Button type="primary" className={styles.submitButton}>
-            <img
-              width={"30px"}
-              height={"30px"}
-              alt="Send icon"
-              src={"/paper-plane-right.svg"}
-            />
-          </Button>
+          <SendHorizontal aria-hidden className="size-md" />
         )}
-      </section>
-    </div>
+      </Button>
+    </section>
   );
 };
 export default CommentBar;

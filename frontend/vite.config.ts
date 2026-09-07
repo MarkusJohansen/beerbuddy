@@ -2,6 +2,8 @@
 
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import path from "node:path";
 
 export default defineConfig(({ command }) => {
   // Vite bakes this into the bundle at build time. It used to have no check, so
@@ -14,7 +16,11 @@ export default defineConfig(({ command }) => {
   }
 
   return {
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
+    resolve: {
+      // Mirrors the "@/*" path in tsconfig.json, which only type-checks.
+      alias: { "@": path.resolve(import.meta.dirname, "src") },
+    },
     server: {
       port: 5173,
       host: true,

@@ -1,19 +1,22 @@
-import BeerAttribute from "../components/beer-attribute/BeerAttribute";
-import styles from "./Beer.module.css";
-import { useParams } from "react-router";
-import Logo from "../components/logo/Logo";
-import { Spin } from "antd";
-import useFetchBeer from "../utils/useFetchBeer";
-import InfiniteScroll from "react-infinite-scroll-component";
-import CommentItem from "../components/comment-item/CommentItem";
 import { useEffect, useState } from "react";
+import { useParams } from "react-router";
+import InfiniteScroll from "react-infinite-scroll-component";
+import BeerAttribute from "../components/beer-attribute/BeerAttribute";
+import MobileBeerAttribute from "../components/beer-attribute/MobileBeerAttribute";
+import CommentItem from "../components/comment-item/CommentItem";
 import CommentBar from "../components/comment-bar/CommentBar";
+import Logo from "../components/logo/Logo";
+import Voter from "../components/voter/Voter";
+import Spinner from "../components/ui/spinner";
+import useFetchBeer from "../utils/useFetchBeer";
 import protectRoute from "../utils/protectRoute";
 import useWindowDimensions from "../utils/useWindowDimensions";
-import MobileBeerAttribute from "../components/beer-attribute/MobileBeerAttribute";
-import Voter from "../components/voter/Voter";
+import { MOBILE, TABLET } from "../utils/breakpoints";
 import { fetchComments } from "../api/client";
 import type { Comment } from "../types/types";
+
+/** How many comments a page of the thread holds. */
+const COMMENT_PAGE_SIZE = 5;
 
 /**
  * BeerPage component that displays detailed information about a beer and its comments.
@@ -30,7 +33,6 @@ const BeerPage = () => {
   const [newComment, setNewComment] = useState(false);
   const { width } = useWindowDimensions();
 
-  const limit = 5;
   const [comments, setComments] = useState<Comment[]>([]);
 
   useEffect(() => {
@@ -39,7 +41,7 @@ const BeerPage = () => {
 
     setCommentsLoading(true);
     setOffset(0);
-    fetchComments(Number(id), limit, 0)
+    fetchComments(Number(id), COMMENT_PAGE_SIZE, 0)
       .then(setComments)
       .catch((error) => {
         console.error("Could not load comments:", error);
@@ -57,150 +59,147 @@ const BeerPage = () => {
     newComment,
   });
 
-  const AttributeValues = [
-    {
-      attribute: "Style",
-      icon: "/yellowBottle.svg",
-      altText: "Bottle icon",
-      value: beer?.style,
-    },
-    {
-      attribute: "ABV",
-      icon: "/yellowPercent.svg",
-      altText: "Percentage icon",
-      value: String(beer?.abv ?? 0 * 100) + "%",
-    },
-    {
-      attribute: "IBU",
-      icon: "/yellowHop.svg",
-      altText: "Hop icon",
-      value: beer?.ibu,
-    },
-    {
-      attribute: "Volume",
-      icon: "/yellowVolume.svg",
-      altText: "Glass volume",
-      value: beer?.ounces + "oz",
-    },
-  ];
-
   if (isLoading || beer === undefined) {
     return (
-      <div className={styles.centerContent}>
-        <Spin size="large" />
+      <div className="flex h-screen items-center justify-center bg-ground">
+        <Spinner label="Loading beer" size="large" />
       </div>
     );
   }
 
   if (isError || id === undefined) {
-    return <div>Error fetching beer</div>;
+    return (
+      <div className="flex h-screen items-center justify-center bg-ground text-ink">
+        Error fetching beer
+      </div>
+    );
   }
 
-  return (
-    <main className={styles.main}>
-      {width > 1000 ? (
-        <>
-          <div className={styles.logo}>
-            <Logo />
-          </div>
-          <a href="/" className={styles.menuButton}>
-            {"Back to menu"}
-          </a>
-        </>
-      ) : (
-        <>
-          <header className={styles.headingWrapper}>
-            <Logo />
-          </header>
-          <hr className={styles.separator} />
-        </>
-      )}
+  const attributes = [
+    {
+      attribute: "Style",
+      icon: "",
+      altText: "",
+      value: beer.style,
+    },
+    {
+      attribute: "ABV",
+      icon: "",
+      altText: "",
+      value: String((beer.abv * 100).toFixed(1)) + "%",
+    },
+    {
+      attribute: "IBU",
+      icon: "",
+      altText: "",
+      value: beer.ibu !== 0 ? String(beer.ibu).split(".")[0] : null,
+    },
+    {
+      attribute: "Volume",
+      icon: "",
+      altText: "",
+      value: beer.ounces + "oz",
+    },
+  ];
 
-      <p className={styles.breweryName}>{beer?.brewery_name}</p>
-      <h1 className={styles.beerName}>{beer.name}</h1>
-      <div className={styles.rating}>
-        <Voter
-          votes={beer.rating || 0}
-          reaction={beer.user_vote}
-          beerId={beer.id}
-          onSuccess={() => {
-            setNewVote(!newVote);
-          }}
-        />
-      </div>
-      <p className={styles.basedOn}>
-        Based on {beer.vote_count !== null ? beer.vote_count : "0"} review
-        {beer.vote_count === 1 ? "" : "s"}
-      </p>
-      <section className={styles.info} aria-label="Beer attributes">
-        {width > 768 ? (
-          <>
-            <BeerAttribute
-              attribute="Style"
-              icon={"/bottle.svg"}
-              altText={"Bottle icon"}
-              value={beer.style}
-            />
-            <BeerAttribute
-              attribute="ABV"
-              icon={"/percent.svg"}
-              altText={"Percentage icon"}
-              value={String((beer.abv * 100).toFixed(1)) + "%"}
-            />
-            {beer.ibu !== 0 && (
-              <BeerAttribute
-                icon={"/hop.svg"}
-                altText={"Hop icon"}
-                attribute="IBU"
-                value={String(beer.ibu).split(".")[0]}
-              />
-            )}
-            <BeerAttribute
-              icon={"/volume.svg"}
-              altText={"Glass volume"}
-              attribute="Volume"
-              value={beer.ounces + "oz"}
-            />
-          </>
-        ) : (
-          <MobileBeerAttribute attributeProps={AttributeValues} />
+  return (
+    <main className="mx-auto min-h-screen max-w-4xl bg-ground px-md py-xl text-ink tablet:px-2xl">
+      <header className="flex items-center justify-between gap-md border-b border-rule pb-md">
+        <Logo />
+        {width > TABLET && (
+          <a
+            href="/"
+            className="text-base text-accent underline underline-offset-4 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            Back to menu
+          </a>
         )}
-      </section>
-      <hr className={styles.divider} />
+      </header>
+
+      <div className="flex flex-col gap-lg py-xl">
+        <div className="flex flex-col gap-xs">
+          <p className="m-0 text-xs tracking-[0.1em] text-ink-mute uppercase">
+            {beer.brewery_name}
+          </p>
+          <h1 className="m-0 font-display text-2xl leading-none tracking-[-0.02em] text-ink">
+            {beer.name}
+          </h1>
+        </div>
+
+        <div className="flex items-center gap-md">
+          <Voter
+            votes={beer.rating || 0}
+            reaction={beer.user_vote}
+            beerId={beer.id}
+            onSuccess={() => setNewVote(!newVote)}
+          />
+          <p className="tnum m-0 text-xs text-ink-mute">
+            Based on {beer.vote_count !== null ? beer.vote_count : "0"} review
+            {beer.vote_count === 1 ? "" : "s"}
+          </p>
+        </div>
+
+        <section
+          aria-label="Beer attributes"
+          className="border-y border-rule py-md"
+        >
+          {width > MOBILE ? (
+            <div className="flex flex-wrap gap-2xl">
+              {attributes
+                .filter((a) => a.value !== null)
+                .map((a) => (
+                  <BeerAttribute
+                    key={a.attribute}
+                    attribute={a.attribute}
+                    icon={a.icon}
+                    altText={a.altText}
+                    value={a.value ?? undefined}
+                  />
+                ))}
+            </div>
+          ) : (
+            <MobileBeerAttribute
+              attributeProps={attributes.map((a) => ({
+                ...a,
+                value: a.value ?? undefined,
+              }))}
+            />
+          )}
+        </section>
+      </div>
+
       <InfiniteScroll
         style={{ overflow: "hidden", minHeight: "33vh" }}
         dataLength={comments.length}
         next={() => {
           /* Fetch the next comments we need, and add them to the comments state */
-          fetchComments(Number(id), limit, offset + limit)
+          fetchComments(
+            Number(id),
+            COMMENT_PAGE_SIZE,
+            offset + COMMENT_PAGE_SIZE
+          )
             .then((data) => {
               setComments([...comments, ...data]);
-              setOffset(offset + limit);
+              setOffset(offset + COMMENT_PAGE_SIZE);
             })
             .catch((error) => console.error("Could not load comments:", error));
         }}
         hasMore={comments.length < beer.comment_count}
         loader={
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <Spin size="default" />
+          <div className="flex justify-center py-md">
+            <Spinner label="Loading more comments" />
           </div>
         }
         scrollThreshold={1}
       >
-        <ul
-          className={styles.commentListContainer}
-          aria-label="List of comments"
-        >
+        <ul aria-label="List of comments" className="m-0 list-none p-0">
           {commentsLoading ? (
-            <div className={styles.centerContent}>
-              <Spin size="default" />
+            <div className="flex justify-center py-xl">
+              <Spinner label="Loading comments" />
             </div>
           ) : (
             comments.map((comment) => (
-              <li
-                className={styles.listItem}
-                key={`${comment.username}-${comment.created_at}}`}
-              >
+              <li key={`${comment.username}-${comment.created_at}}`}>
                 <CommentItem
                   id={comment.id}
                   userId={comment.user_id}
@@ -214,6 +213,7 @@ const BeerPage = () => {
           )}
         </ul>
       </InfiniteScroll>
+
       <CommentBar onSuccess={() => setNewComment(true)} />
     </main>
   );

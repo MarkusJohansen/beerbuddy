@@ -1,86 +1,75 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowUp, LogOut } from "lucide-react";
 import Sidebar from "../components/sidebar/Sidebar";
 import Actionbar from "../components/actionbar/Actionbar";
 import UserIntro from "../components/user-intro/UserIntro";
 import BeerList from "../components/beer-list/BeerList";
 import Filters from "../components/filters/Filters";
+import { Button } from "../components/ui/button";
 import useFetchMoreBeers from "../utils/useFetchMoreBeers";
-import appStyles from "./App.module.css";
 import protectRoute from "../utils/protectRoute";
-import { useEffect, useRef, useState } from "react";
-import { Button, FloatButton } from "antd";
-import { ArrowUpOutlined, LogoutOutlined } from "@ant-design/icons";
 
+/** How far the catalogue must scroll before the return-to-top control appears. */
+const TO_TOP_AFTER_PX = 100;
+
+/**
+ * The catalogue: the filter sidebar beside a scrolling list of beers.
+ * @returns The catalogue page.
+ */
 const App = () => {
   useEffect(() => {
     protectRoute();
   }, []);
   const { beers, totalCount, fetchMore } = useFetchMoreBeers();
 
-  const mainRef = useRef<HTMLAnchorElement>(null);
+  const skipLinkRef = useRef<HTMLAnchorElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
+  const [showTopButton, setShowTopButton] = useState(false);
 
-  /**
-   * Adds an event listener for the "Escape" key and executes the provided action when the key is pressed.
-   * @param action The action to be executed when the "Escape" key is pressed.
-   */
-  const onEscape = (action: () => void) => {
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        action();
-      }
-    });
-  };
-  onEscape(() => {
-    mainRef.current?.focus();
-  });
-  const divRef = useRef<HTMLDivElement>(null);
-  const scrollToTop = () => {
-    divRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  };
-  const [showTopBtn, setShowTopBtn] = useState(false);
-
+  // Escape returns focus to the skip link. This used to register a fresh window
+  // listener on every render and remove none of them; the dialog relies on the
+  // listener being well behaved, so it is an effect with a teardown now.
   useEffect(() => {
-    divRef.current?.addEventListener("scroll", () => {
-      if (
-        divRef.current?.scrollTop !== undefined &&
-        divRef.current?.scrollTop > 100
-      ) {
-        setShowTopBtn(true);
-      } else {
-        setShowTopBtn(false);
-      }
-    });
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") skipLinkRef.current?.focus();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
+  useEffect(() => {
+    const main = mainRef.current;
+    if (!main) return;
+    const onScroll = () => setShowTopButton(main.scrollTop > TO_TOP_AFTER_PX);
+    main.addEventListener("scroll", onScroll);
+    return () => main.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const scrollToTop = useCallback(
+    () => mainRef.current?.scrollTo({ top: 0, behavior: "smooth" }),
+    []
+  );
+
   return (
-    <>
+    <div className="flex h-screen w-full bg-ground text-ink">
       <a
         href="#infiniteScrollTarget"
-        className={appStyles.skipLink}
-        ref={mainRef}
+        ref={skipLinkRef}
+        className="absolute top-0 left-1/2 z-50 -translate-x-1/2 -translate-y-full bg-accent px-md py-sm text-ground focus:translate-y-0"
       >
         Skip to main content
       </a>
-      <Button
-        icon={<LogoutOutlined style={{ fontSize: "1.5rem", color: "black" }} />}
-        onClick={() => {
-          localStorage.removeItem("userIdBeerBuddy");
-          window.location.reload();
-        }}
-        aria-label="Logout button"
-        className={appStyles.logoutBtn}
-        style={{
-          width: "2.5rem",
-        }}
-      />
-      <div className={appStyles.appBody}>
-        <Sidebar>
-          <Filters fetchMore={fetchMore} />
-        </Sidebar>
-        <main
-          className={appStyles.mainSection}
-          id="infiniteScrollTarget"
-          ref={divRef}
-        >
+
+      <Sidebar>
+        <Filters fetchMore={fetchMore} />
+      </Sidebar>
+
+      <main
+        id="infiniteScrollTarget"
+        ref={mainRef}
+        className="flex-1 overflow-y-auto px-md py-xl tablet:px-2xl"
+      >
+        <div className="mx-auto flex max-w-4xl flex-col gap-xl">
           <UserIntro />
           <Actionbar fetchMore={fetchMore} />
           <BeerList
@@ -88,18 +77,34 @@ const App = () => {
             totalCount={totalCount}
             fetchMore={fetchMore}
           />
-          {showTopBtn && (
-            <FloatButton
-              onClick={scrollToTop}
-              className={appStyles.iconStyle}
-              aria-label="Scroll to top button"
-              tooltip="To top"
-              icon={<ArrowUpOutlined />}
-            />
-          )}
-        </main>
-      </div>
-    </>
+        </div>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => {
+            localStorage.removeItem("userIdBeerBuddy");
+            window.location.reload();
+          }}
+          aria-label="Log out"
+          className="fixed top-md right-md"
+        >
+          <LogOut aria-hidden className="size-md" />
+        </Button>
+
+        {showTopButton && (
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={scrollToTop}
+            aria-label="Back to top"
+            className="fixed right-lg bottom-lg bg-ground"
+          >
+            <ArrowUp aria-hidden className="size-md" />
+          </Button>
+        )}
+      </main>
+    </div>
   );
 };
 

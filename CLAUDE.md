@@ -38,6 +38,20 @@ make typecheck       # both packages
 
 **Podman's machine must be running first** — `podman machine start`.
 
+**After adding a frontend dependency, `make up-build` is not enough.** `compose.yaml`
+mounts an anonymous volume at `/app/node_modules` so the bind mount of `./frontend`
+does not shadow the image's modules. That volume persists across image rebuilds, so a
+newly installed package is present in the image and absent in the running container,
+and Vite fails with `Failed to resolve import "…". Does the file exist?` while
+everything else — `make check` included, because it runs in a one-off container that
+mounts the repo — stays green. Remove the volume:
+
+```bash
+podman rm -f beerbuddy_frontend_1
+podman volume rm "$(podman volume ls -q | grep beerbuddy_frontend_)"
+make up
+```
+
 **Three `.env` files are not in git.** `make env` creates them from the
 `.env.example` files. Both required values fail loudly now: the backend exits at
 startup naming `DATABASE_URL`, and the frontend build fails without
@@ -68,21 +82,29 @@ preferences.
    that single expression. Split them into separate `app.get(...)` statements and the
    routes vanish from the type, and the frontend silently stops type-checking them.
 
-5. **Do not remove MUI.** It is a second component library carried for exactly one
-   component: Ant Design's `Slider` failed the accessibility audits, so the ABV and
-   IBU sliders are MUI's. This looks like obvious bloat to delete and it is a
-   deliberate accessibility decision — see
-   [`docs/accessibility.md`](docs/accessibility.md#material-ui-components). Removing
-   it requires demonstrating a replacement that passes the axe assertions.
+5. **Do not make the range sliders a plain `<input type="range">`.** `radix-ui` is a
+   dependency for exactly one component: the ABV and IBU filters are two-thumb
+   ranges and the native element has one thumb. It looks like the obvious thing to
+   delete. MUI was carried for the same reason before it, and replacing it required
+   demonstrating the replacement rather than assuming it — `slider.test.tsx` asserts
+   thumb independence, the announced bounds, arrow/Home/End keys and axe. Any future
+   replacement clears the same bar.
 
 6. **Do not add dependencies.** Minimal dependency count is a *graded* requirement
    and the reasoning is written down in
    [`docs/sustainability.md`](docs/sustainability.md), with the current figures. The
-   count is 41 direct, down from 55. If something genuinely needs a new package, say
-   what it replaces and why the argument in that document no longer holds.
+   count is 41 direct, down from 55 — and it survived replacing the component
+   library only because six controls use native elements instead of the Radix
+   packages shadcn would otherwise install. Reach for `<details>`, `<dialog>`,
+   `<select>`, `<input type="checkbox">`, `<label>` and `<hr>` before reaching for a
+   package. If something genuinely needs a new one, say what it replaces and why the
+   argument in that document no longer holds.
 
 7. **Accessibility failures are test failures.** `jest-axe` assertions run inside the
-   unit suite. When a snapshot or axe assertion fails, read the diff — do not reach
+   unit suite. Two of the elements the interface leans on — `<dialog>` and Radix's
+   slider — are stubbed in `src/vitest-setup.ts` because jsdom implements neither
+   `showModal()` nor `ResizeObserver`; without those stubs every test touching the
+   filter panel throws before it reaches an assertion. When a snapshot or axe assertion fails, read the diff — do not reach
    for `-u`. The suite is render-plus-snapshot, so it is good at catching markup
    change and weak at catching wrong behaviour; a passing snapshot proves less than
    it looks like. An axe failure is the behavioural half.
@@ -120,22 +142,39 @@ treat the fix as a documentation change too — README and ARCHITECTURE both des
 them by name, so a silent fix leaves the docs lying.
 
 That applies to: the absent authentication, the absent rate limiting, the cache
-purging wholesale on any write, the single 1,019 kB bundle chunk, backend hot reload
-not working in-container on macOS, the ten React Compiler lint rules switched off,
-the five styleless beers reachable only through "Other", and `unreact` being stored
-as a row rather than deleting one.
+purging wholesale on any write, backend hot reload not working in-container on macOS,
+the ten React Compiler lint rules switched off, the five styleless beers reachable
+only through "Other", and `unreact` being stored as a row rather than deleting one.
+
+The 1,019 kB single chunk is no longer one of them: removing Ant Design took the
+bundle to **325 kB** (106 kB gzipped). It is still a single chunk, and still over
+Vite's 500 kB warning threshold before gzip — but the defect as documented no longer
+describes the code.
 
 ## Style, as this codebase writes it
 
-- **One directory per component**, holding `Component.tsx`, `Component.module.css`,
-  `Component.test.tsx` and `__snapshots__/`. Follow it for anything new.
-- **CSS Modules per component.** Colours come from the `ConfigProvider` theme tokens
-  in `main.tsx`, not from component styles. `ant-design-overrides.css` is for library
-  internals the tokens cannot reach — a last resort, not a first one.
-- **Responsiveness is JavaScript**, via `useWindowDimensions()`, branching at 768 and
-  1000 px. Match that rather than mixing in media queries. The breakpoints are magic
-  numbers duplicated across files — a seventh copy is the moment to extract a
-  constant.
+- **One directory per component**, holding `Component.tsx`, `Component.test.tsx` and
+  `__snapshots__/`. There is no `Component.module.css` any more — the CSS Modules are
+  gone, along with Ant Design.
+- **Tailwind utilities bound to tokens.** Every colour, type size, spacing step and
+  radius comes from `src/styles/tokens.css`, which is the only file allowed to hold a
+  colour literal — `no-hardcoded-colours.test.ts` fails the build otherwise. The
+  scales are closed: each namespace opens with a `--<namespace>-*: initial` reset, so
+  `p-[7px]` and `text-sm` do not exist. That is deliberate. A value genuinely outside
+  the scale gets an arbitrary value **and a comment saying why**.
+- **shadcn/ui source is ours.** `src/components/ui/` is vendored code, edited in
+  place. Anything a later `shadcn add` drops there arrives in upstream's idiom —
+  rounded, shadowed, `bg-primary` — and none of those tokens exist here, so it needs
+  the same rewrite the first four got.
+- **One accent, and it only carries meaning.** A link, an active filter, the user's
+  own vote. Not "this button is important". The test is in
+  `openspec/specs/design-system/`: strip every accent rule and the hierarchy must
+  still read from type, grid and spacing alone.
+- **Responsiveness is JavaScript**, via `useWindowDimensions()` compared against
+  `MOBILE` and `TABLET` from `src/utils/breakpoints.ts`. Those were literals in seven
+  components; they are one module now. The same two values are also declared as
+  Tailwind screens in `tokens.css`, because a `@media` condition cannot read a custom
+  property — that duplication is deliberate and commented in both files.
 - **State is `FilterContext` plus local `useState`.** No Redux, no query cache, no
   normalised store. Do not introduce one for four screens.
 - **All API calls go through `src/api/client.ts`.** No `fetch` elsewhere. Components

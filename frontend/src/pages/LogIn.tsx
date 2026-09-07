@@ -1,5 +1,3 @@
-import { App } from "antd";
-import type { ValidateErrorEntity } from "rc-field-form/lib/interface";
 import { useCallback, useEffect, useState } from "react";
 import { v4 } from "uuid";
 
@@ -7,14 +5,14 @@ import useWindowDimensions from "../utils/useWindowDimensions";
 import LoginFormMobile from "../components/login-forms/LoginFormMobile";
 import LoginFormDesktop from "../components/login-forms/LoginFormDesktop";
 import { createSession } from "../api/client";
+import { useToast } from "../components/ui/use-toast";
+import { MOBILE } from "../utils/breakpoints";
 
 /**
  * Callback for when the form fails to validate.
  * @param errorInfo - the error info from the form
  */
-const onFinishFailed = (
-  errorInfo: ValidateErrorEntity<{ username: string }>
-) => {
+const onFinishFailed = (errorInfo: unknown) => {
   console.error("Failed:", errorInfo);
 };
 
@@ -23,7 +21,7 @@ const onFinishFailed = (
  * @returns a LogInPage component
  */
 const LogInPage = () => {
-  const { message } = App.useApp();
+  const toast = useToast();
   const { width } = useWindowDimensions();
   const username = localStorage.getItem("userNameBeerBuddy");
   const [isNewUser, setIsNewUser] = useState<boolean | null>(null);
@@ -44,10 +42,10 @@ const LogInPage = () => {
         setTimeout(() => window.location.replace("/"), 2000);
       } catch (error) {
         console.error("Could not sign in:", error);
-        message.error("Could not sign you in. Please try again.");
+        toast.error("Could not sign you in. Please try again.");
       }
     },
-    [message]
+    [toast]
   );
 
   // Was previously called straight from the render body, which fired a network
@@ -58,17 +56,17 @@ const LogInPage = () => {
 
   useEffect(() => {
     if (isNewUser === null) return;
-    message.success(
+    toast.success(
       isNewUser ? `Created new user ${username}!` : `Welcome back ${username}!`
     );
-  }, [isNewUser, message, username]);
+  }, [isNewUser, toast, username]);
 
   const saveUser = ({ username: name }: { username: string }) => {
     localStorage.setItem("userNameBeerBuddy", name);
     if (!localStorage.getItem("userIdBeerBuddy")) signIn(name);
   };
 
-  if (width < 768) {
+  if (width < MOBILE) {
     return (
       <LoginFormMobile onFinishFailed={onFinishFailed} saveUser={saveUser} />
     );

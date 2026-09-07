@@ -183,11 +183,12 @@ twice clears it. Comments are 1–200 characters and you can delete your own.
 | ---------------- | ---------------------------------------------------------- |
 | React 19 + Vite 8 | SPA, four routes                                           |
 | TypeScript 6      | strict                                                     |
-| Ant Design 5      | components                                                 |
-| MUI 9             | **one component** — the ABV/IBU sliders. antd's `Slider` failed the accessibility audit. Do not delete it; see [`docs/accessibility.md`](docs/accessibility.md#material-ui-components). |
+| Tailwind 4        | utilities bound to the tokens in `src/styles/tokens.css`     |
+| shadcn/ui         | four components, **vendored as source** into `src/components/ui/` and edited there — not an installed package |
+| Native elements   | `<details>`, `<dialog>`, `<select>`, `<input type="checkbox">`, `<hr>` in place of the Radix packages shadcn would otherwise install |
+| `radix-ui`        | **one component** — the ABV/IBU sliders. Two-thumb ranges have no native equivalent; `<input type="range">` has one thumb. See [`docs/accessibility.md`](docs/accessibility.md) |
 | `hono/client`     | the typed API caller — no codegen, no client library on the wire |
-| CSS Modules       | one per component; colours from the antd theme tokens in `main.tsx` |
-| Vitest 5 + jest-axe | 85 tests, accessibility assertions included              |
+| Vitest 5 + jest-axe | 146 tests, accessibility assertions included             |
 
 ### Backend
 
@@ -231,7 +232,7 @@ gives wrong answers on the name and style columns.
 ## Testing
 
 ```bash
-make test-frontend   # 85 tests, seconds, no network
+make test-frontend   # 146 tests, seconds, no network
 make test-backend    # 30 tests against a throwaway database
 make test-e2e        # Playwright against a disposable local stack
 ```
@@ -310,7 +311,9 @@ Documented on purpose. Fix one only when asked, and update this section when you
 - **No rate limiting.** Any client can write as fast as it likes.
 - **The cache purges wholesale on any write.** One vote empties it. Fine at 2,410
   rows; measure before adding tag-based invalidation.
-- **The bundle is a single 1,019 kB chunk** (320 kB gzipped). No code splitting.
+- **The bundle is a single 325 kB chunk** (106 kB gzipped). No code splitting — it
+  is one chunk, still above Vite's 500 kB pre-gzip warning. It was 1,019 kB before
+  Ant Design was removed.
 - **Backend hot reload does not work in-container on macOS.** See above.
 - **Ten React Compiler lint rules are switched off** because they flag pre-existing
   patterns in the data-fetching layer. See
@@ -344,7 +347,7 @@ Recorded because the older documentation described them, and they are gone:
 | [CLAUDE.md](CLAUDE.md)                            | conventions and the sharp edges    |
 | [backend/README.md](backend/README.md)            | the API in detail                  |
 | [frontend/README.md](frontend/README.md)          | components and state               |
-| [docs/accessibility.md](docs/accessibility.md)    | the audit, and why MUI is here     |
+| [docs/accessibility.md](docs/accessibility.md)    | the audit, the contrast table, and why `radix-ui` is here |
 | [docs/sustainability.md](docs/sustainability.md)  | the graded sustainability argument |
 | [docs/contribution.md](docs/contribution.md)      | commits, branches, review          |
 | [docs/requirements.md](docs/requirements.md)      | the original coursework brief      |

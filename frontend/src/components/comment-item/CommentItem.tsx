@@ -1,4 +1,4 @@
-import styles from "./CommentItem.module.css";
+import { Trash2 } from "lucide-react";
 import { deleteComment } from "../../api/client";
 
 interface CommentItemInterface {
@@ -66,20 +66,19 @@ const CommentItem = ({
   onDelete,
 }: CommentItemInterface) => {
   return (
-    <div className={styles.commentContainer}>
-      <div className={styles.commentContentContainer}>
-        <div>
-          <div className={styles.commentHeader}>
-            <p className={styles.commentAuthor}>{username}</p>
-            <p className={styles.dot}>•</p>
-            <p className={styles.commentDate}>{convertTimestamp(timestamp)}</p>
-          </div>
+    <div className="flex items-start justify-between gap-md border-b border-rule py-md">
+      <div className="flex flex-col gap-xs">
+        <div className="flex items-baseline gap-sm">
+          <p className="m-0 text-base text-ink">{username}</p>
+          <p className="m-0 text-xs text-ink-mute">
+            {convertTimestamp(timestamp)}
+          </p>
         </div>
-        <p className={styles.commentText}>{commentText}</p>
+        <p className="m-0 text-base text-ink-dim">{commentText}</p>
       </div>
       {userId === localStorage.getItem("userIdBeerBuddy") && (
         <button
-          className={styles.buttonContainer}
+          className="shrink-0 cursor-pointer border-0 bg-transparent p-0 text-ink-mute transition-colors hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           onClick={() => {
             // Ownership is enforced by the API, which answers 403 for someone
             // else's comment. This button is only rendered for your own.
@@ -89,12 +88,7 @@ const CommentItem = ({
           }}
           aria-label="Delete comment"
         >
-          <img
-            src="/delete-kopi.svg"
-            alt="Trash icon"
-            width={"32px"}
-            height={"32px"}
-          />
+          <Trash2 aria-hidden className="size-md" />
         </button>
       )}
     </div>

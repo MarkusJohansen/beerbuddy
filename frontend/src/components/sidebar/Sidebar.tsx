@@ -1,5 +1,4 @@
 import Logo from "../logo/Logo";
-import styles from "./Sidebar.module.css";
 
 interface SidebarProps {
   children: React.ReactNode;
@@ -8,16 +7,19 @@ interface SidebarProps {
 /**
  * Sidebar component that contains the BeerBuddy logo
  * and a main section for the filter components.
- * It also contains a button that applies the filter settings
- * to the search result.
+ *
+ * Hidden below the tablet breakpoint, where the same filters are reached
+ * through the filter button's dialog instead.
  * @param children - filter components
- * @param fetchMore - function that is called when the apply filters button is clicked
  * @returns a Sidebar component
  */
 const Sidebar = ({ children }: SidebarProps) => {
   return (
-    <section className={styles.container} aria-label="Sidebar">
-      <div>
+    <section
+      aria-label="Sidebar"
+      className="hidden h-screen w-[18rem] shrink-0 overflow-y-auto border-r border-rule px-lg py-xl tablet:block"
+    >
+      <div className="flex flex-col gap-xl">
         <Logo />
         {children}
       </div>

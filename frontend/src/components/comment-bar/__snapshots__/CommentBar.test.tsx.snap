@@ -2,41 +2,33 @@
 
 exports[`CommentBar > should match snapshot 1`] = `
 <div>
-  <div
-    class="_wrapper_b20f29"
+  <section
+    aria-label="Post a comment"
+    class="flex items-end gap-md border-t border-rule pt-md"
   >
     <div
-      class="_divider_b20f29"
-    />
-    <section
-      aria-label="Post a comment"
-      class="_container_b20f29"
+      class="flex flex-1 flex-col gap-xs"
     >
-      <div
-        class="_labelContainer_b20f29"
+      <label
+        class="text-xs tracking-[0.1em] text-ink-mute uppercase"
+        for="_r_0_"
       >
-        <label
-          for="_r_0_"
-        >
-          Comment
-        </label>
-        <input
-          class="ant-input css-dev-only-do-not-override-mncuj7 ant-input-outlined _inputField_b20f29"
-          id="_r_0_"
-          placeholder="Best beer ever!"
-          type="text"
-          value=""
-        />
-      </div>
-      <button
-        class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid _submitButton_b20f29"
-        type="button"
-      >
-        <span>
-          Comment
-        </span>
-      </button>
-    </section>
-  </div>
+        Comment
+      </label>
+      <input
+        class="h-xl w-full min-w-0 rounded-none border-0 border-b border-rule-strong bg-transparent px-0 py-sm font-sans text-base text-ink transition-colors placeholder:text-ink-mute outline-none focus-visible:border-accent disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-accent aria-invalid:border-b-2"
+        data-slot="input"
+        id="_r_0_"
+        placeholder="Best beer ever!"
+        value=""
+      />
+    </div>
+    <button
+      class="inline-flex shrink-0 cursor-pointer items-center justify-center gap-sm rounded-none font-sans whitespace-nowrap transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-accent text-ground hover:bg-ink h-xl px-md text-base"
+      data-slot="button"
+    >
+      Comment
+    </button>
+  </section>
 </div>
 `;

@@ -79,8 +79,8 @@ The current count, direct dependencies only:
 | | Runtime | Dev | Total |
 | -------- | ------: | --: | ----: |
 | Backend  | 3 | 6 | 9 |
-| Frontend | 11 | 21 | 32 |
-| **Total** | **14** | **27** | **41** |
+| Frontend | 9 | 23 | 32 |
+| **Total** | **12** | **29** | **41** |
 
 That is down from **55** (24 runtime, 31 dev). The backend fell from 25 to 9.
 
@@ -107,12 +107,46 @@ The frontend's type-safety across the API costs no runtime dependency at all: th
 types are imported from the backend's source and erased at build time, so nothing
 from the backend reaches the bundle and there is no generated client to maintain.
 
-`@emotion/react` and `@emotion/styled` are the two packages added since. They
-replace nothing. MUI declares them as *optional* peer dependencies, so an install
-omits them, but `@mui/styled-engine` imports them unconditionally — the ABV and IBU
-sliders MUI is carried for cannot render without them. Leaving them undeclared saved
-no package; it only meant a clean install produced a frontend that failed on import,
-which is how CI found them.
+### Replacing the component library held the count flat
+
+Ant Design and MUI were replaced by shadcn/ui, whose components are vendored as source
+into `frontend/src/components/ui/` rather than installed. That removed five runtime
+packages — `antd`, `@ant-design/icons`, `@mui/material`, `@emotion/react` and
+`@emotion/styled` — and added three: `radix-ui`, `cn` and `lucide-react`. Two dev
+packages arrived with Tailwind, `tailwindcss` and `@tailwindcss/vite`.
+
+**Runtime fell from 14 to 12; the total is unchanged at 41.** The bundle fell further:
+**1,019 kB to 325 kB**, and gzipped from 320 kB to 106 kB.
+
+That outcome was not automatic. A default `shadcn add` for the thirteen Ant Design
+components in use pulls roughly ten separate `@radix-ui/*` packages and would have
+landed the repo near **53**. Six of those components have native equivalents that are
+accessible by default, and using them is what kept the count flat:
+
+| Instead of | The platform | Saved |
+| --- | --- | --- |
+| a collapsible panel | `<details>` / `<summary>` | `@radix-ui/react-accordion` |
+| a modal | `<dialog>` + `showModal()` | `@radix-ui/react-dialog` |
+| a select **and** a mobile dropdown | a styled native `<select>` | two packages, and a responsive branch |
+| a checkbox | `<input type="checkbox">` | `@radix-ui/react-checkbox` |
+| a divider | `<hr>` | `@radix-ui/react-separator` |
+| a toast queue | an `aria-live` region | `sonner` |
+
+`@radix-ui/react-slider` is the single exception, reached through the umbrella
+`radix-ui` package: the ABV and IBU filters are two-thumb ranges and
+`<input type="range">` has one thumb. It is the same reason MUI was carried, so it
+replaces a dependency rather than adding one — and unlike MUI it needs no styling
+engine, which is why both emotion packages could go.
+
+`cn` supplies the class-merging helper shadcn's source expects, in one package rather
+than the `clsx` plus `tailwind-merge` pair upstream assumes.
+`class-variance-authority` was **not** installed: four button variants do not need a
+variant engine, so the vendored source was rewritten without it.
+
+Two fonts are self-hosted from `public/fonts/` as latin-subset `woff2` — 67 kB and
+48 kB — rather than linked from a font CDN. That is not an npm dependency either way;
+self-hosting keeps a third-party request off the critical path and the app working
+offline, at the cost of two committed binaries.
 
 If something genuinely needs a new package, say what it replaces and why the
 argument above no longer holds.

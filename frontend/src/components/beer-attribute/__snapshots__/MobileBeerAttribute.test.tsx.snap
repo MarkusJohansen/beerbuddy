@@ -2,84 +2,51 @@
 
 exports[`MobileBeerAttribute > renders correctly 1`] = `
 <div>
-  <div
-    class="_mobileContainer_fae872"
+  <dl
+    class="m-0 flex w-full flex-col"
   >
-    <div>
-      <div
-        class="_mobileHeaderContainer_fae872"
+    <div
+      class="flex items-baseline justify-between gap-md border-b border-rule py-sm"
+    >
+      <dt
+        class="text-xs tracking-[0.1em] text-ink-mute uppercase"
       >
-        <img
-          alt="alternative text"
-          height="32px"
-          width="20px"
-        />
-        <div
-          class="_textContainer_fae872"
-        >
-          <h3
-            class="_mobileHeading_fae872"
-          >
-            Testdata 1
-          </h3>
-          <p
-            class="_mobileText_fae872"
-          >
-            1
-          </p>
-        </div>
-      </div>
-    </div>
-    <div>
-      <div
-        class="_mobileHeaderContainer_fae872"
+        Testdata 1
+      </dt>
+      <dd
+        class="tnum m-0 font-display text-base text-ink"
       >
-        <img
-          alt="alternative text"
-          height="32px"
-          width="20px"
-        />
-        <div
-          class="_textContainer_fae872"
-        >
-          <h3
-            class="_mobileHeading_fae872"
-          >
-            Testdata 2
-          </h3>
-          <p
-            class="_mobileText_fae872"
-          >
-            2
-          </p>
-        </div>
-      </div>
+        1
+      </dd>
     </div>
-    <div>
-      <div
-        class="_mobileHeaderContainer_fae872"
+    <div
+      class="flex items-baseline justify-between gap-md border-b border-rule py-sm"
+    >
+      <dt
+        class="text-xs tracking-[0.1em] text-ink-mute uppercase"
       >
-        <img
-          alt="alternative text"
-          height="32px"
-          width="20px"
-        />
-        <div
-          class="_textContainer_fae872"
-        >
-          <h3
-            class="_mobileHeading_fae872"
-          >
-            Testdata 3
-          </h3>
-          <p
-            class="_mobileText_fae872"
-          >
-            3
-          </p>
-        </div>
-      </div>
+        Testdata 2
+      </dt>
+      <dd
+        class="tnum m-0 font-display text-base text-ink"
+      >
+        2
+      </dd>
     </div>
-  </div>
+    <div
+      class="flex items-baseline justify-between gap-md border-b border-rule py-sm"
+    >
+      <dt
+        class="text-xs tracking-[0.1em] text-ink-mute uppercase"
+      >
+        Testdata 3
+      </dt>
+      <dd
+        class="tnum m-0 font-display text-base text-ink"
+      >
+        3
+      </dd>
+    </div>
+  </dl>
 </div>
 `;

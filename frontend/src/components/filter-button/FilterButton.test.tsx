@@ -42,16 +42,15 @@ describe("FilterButton", () => {
 
     fireEvent.click(screen.getByRole("button"));
 
-    const dialog = screen.getByRole("dialog");
-    expect(dialog.parentElement).toBeVisible();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
 
     const closeButton = screen.getByRole("button", { name: /close/i });
     fireEvent.click(closeButton);
 
-    /* The wrapper only gets display:none once antd's leave animation finishes,
-       and jsdom never fires transitionend — so it stays visible forever here.
-       The observable signal that closing began is the dialog entering its leave
-       state. */
-    await waitFor(() => expect(dialog.className).toMatch(/ant-zoom-leave/));
+    /* The native <dialog> closes synchronously — there is no leave animation to
+       wait out, so the panel's own contents going away is the assertion. */
+    await waitFor(() =>
+      expect(screen.queryByText("Filters")).not.toBeInTheDocument()
+    );
   });
 });

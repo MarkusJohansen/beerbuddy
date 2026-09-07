@@ -1,6 +1,6 @@
 # BeerBuddy frontend
 
-React 19 + Vite 8, TypeScript 6, Ant Design 5 (plus MUI for one component).
+React 19 + Vite 8, TypeScript 6, Tailwind 4 with shadcn/ui vendored as source.
 
 ## Running it
 
@@ -65,8 +65,9 @@ authenticate you.
 src/
 ├── api/client.ts        the typed caller — every request
 ├── components/          one directory per component:
-│                        Component.tsx, Component.module.css,
-│                        Component.test.tsx, __snapshots__/
+│   │                    Component.tsx, Component.test.tsx, __snapshots__/
+│   └── ui/              vendored shadcn/ui source and the native-element
+│                        wrappers — edited here, not installed
 ├── context/             FilterContext — filters, sorting, and the style list
 ├── pages/               App (catalogue), Beer, LogIn, FallbackPage
 ├── utils/
@@ -74,7 +75,10 @@ src/
 │   ├── useFetchBeer.tsx     one beer
 │   ├── useFetchMoreBeers.tsx  the catalogue, paginated
 │   ├── protectRoute.tsx     route guard
+│   ├── breakpoints.ts       MOBILE and TABLET, the only copy
 │   └── useWindowDimensions.tsx
+├── styles/tokens.css    the palette, scales and Tailwind @theme — the only
+│                        file allowed to hold a colour literal
 ├── types/types.ts       derived from the client
 ├── vitest-setup.ts      jest-axe matcher, jsdom matchMedia stub
 └── vitest.d.ts          the matcher's Vitest type
@@ -83,32 +87,40 @@ tests/                   Playwright
 
 ## Conventions
 
-- **One directory per component**, holding the component, its CSS Module, its test
-  and its snapshots. Follow it for anything new.
-- **CSS Modules per component.** Colours come from the Ant Design theme tokens in
-  `main.tsx`, not from component styles. `ant-design-overrides.css` is for library
-  internals the tokens cannot reach — a last resort.
-- **Responsiveness is JavaScript**, via `useWindowDimensions()`, branching at 768 and
-  1000 px. Match that rather than mixing in media queries. The breakpoints are magic
-  numbers duplicated across files; a seventh copy is the moment to extract a
-  constant.
+- **One directory per component**, holding the component, its test and its
+  snapshots. There is no CSS Module — they are gone.
+- **Tailwind utilities bound to tokens.** Every value comes from
+  `styles/tokens.css`, the only file allowed a colour literal;
+  `no-hardcoded-colours.test.ts` enforces it. The scales are closed by a
+  `--<namespace>-*: initial` reset, so `text-sm` and `p-[7px]` do not exist.
+- **One accent, carrying meaning only.** Strip every accent rule and the hierarchy
+  must still read from type, grid and spacing alone.
+- **Responsiveness is JavaScript**, via `useWindowDimensions()` against `MOBILE` and
+  `TABLET` from `utils/breakpoints.ts`. The same values are Tailwind screens in
+  `tokens.css`; a `@media` condition cannot read a custom property, so that one
+  duplication is deliberate.
 - **State is `FilterContext` plus local `useState`.** No Redux, no query cache, no
   normalised store, for four screens.
 - **JSDoc on exported functions and components.** The existing code is consistent
   about it.
 
-## The two component libraries
+## Components
 
-Ant Design does everything except the ABV and IBU sliders, which are MUI's.
+There is no component library. `components/ui/` holds four shadcn/ui files vendored
+as **source** — `button`, `card`, `input`, `slider` — rewritten against the tokens,
+plus small wrappers over native elements: `dialog` (`<dialog>` + `showModal()`),
+`select`, `checkbox`, `spinner` and `toast` (an `aria-live` region). The filter groups
+are plain `<details>`.
 
-**This is deliberate and MUI must not be removed.** Ant Design's `Slider` failed the
-accessibility audit under Firefox Accessibility, WAVE and aXe. See
-[`docs/accessibility.md`](../docs/accessibility.md#material-ui-components) — removing
-it requires demonstrating a replacement that passes the axe assertions first.
+Anything a later `shadcn add` writes there arrives in upstream's idiom — rounded,
+shadowed, `bg-primary` — against tokens that do not exist here. It needs the same
+rewrite the first four got.
 
-Ant Design stays on the 5 line. antd 6 supports React 19 natively but is a breaking
-major; 5.29 works here because every `message` call goes through `App.useApp()`
-rather than the static API React 19 breaks, so no compatibility patch is needed.
+**`radix-ui` is present for one component.** The ABV and IBU filters are two-thumb
+ranges and `<input type="range">` has one thumb. MUI was carried for the same reason
+before it; replacing it required demonstrating the replacement, which
+`components/ui/slider.test.tsx` does — thumb independence, announced bounds,
+arrow/Home/End keys and axe. Any future replacement clears the same bar.
 
 ## Beer styles
 
@@ -127,7 +139,7 @@ dataset as well as the label, so ticking it matches both.
 ## Tests
 
 ```bash
-make test-frontend   # 85 tests
+make test-frontend   # 146 tests
 make test-e2e        # Playwright against a disposable local stack
 ```
 

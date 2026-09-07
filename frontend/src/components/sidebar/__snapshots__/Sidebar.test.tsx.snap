@@ -4,295 +4,455 @@ exports[`Sidebar > renders correctly 1`] = `
 <div>
   <section
     aria-label="Sidebar"
-    class="_container_d1a476"
+    class="hidden h-screen w-[18rem] shrink-0 overflow-y-auto border-r border-rule px-lg py-xl tablet:block"
   >
-    <div>
+    <div
+      class="flex flex-col gap-xl"
+    >
       <a
-        class="_wrapper_72d84d"
+        class="flex items-center gap-sm no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         href="/"
       >
         <img
           alt="BeerBuddy logo"
-          class="_icon_72d84d"
+          class="size-lg"
           src="/teku.svg"
         />
         <h1
-          class="_heading_72d84d"
+          class="m-0 font-display text-lg tracking-[-0.02em] text-ink"
         >
           BeerBuddy
         </h1>
       </a>
       <section
-        aria-labelledby="_r_7_"
+        aria-labelledby="_r_1_"
+        class="flex flex-col gap-md"
       >
-        <div
-          class="ant-divider css-dev-only-do-not-override-mncuj7 ant-divider-horizontal"
-          role="separator"
-        />
         <h2
-          id="_r_7_"
+          class="m-0 text-xs tracking-[0.1em] text-ink-mute uppercase"
+          id="_r_1_"
         >
           Filters
         </h2>
-        <div
-          aria-label="Beer styles"
-          class="ant-collapse ant-collapse-icon-position-start _collapse_1a0a67 css-dev-only-do-not-override-mncuj7"
+        <details
+          class="group border-b border-rule py-md"
+          open=""
         >
-          <div
-            class="ant-collapse-item"
+          <summary
+            class="flex cursor-pointer list-none items-center justify-between gap-sm text-base text-ink marker:content-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
-            <div
-              aria-disabled="false"
-              aria-expanded="false"
-              class="ant-collapse-header"
-              role="button"
-              tabindex="0"
+            Beer styles
+            <span
+              aria-hidden="true"
+              class="text-ink-mute transition-transform group-open:rotate-90"
             >
-              <div
-                class="ant-collapse-expand-icon"
-              >
-                <span
-                  aria-hidden="true"
-                  aria-label="right"
-                  class="anticon anticon-right ant-collapse-arrow"
-                  role="img"
-                >
-                  <svg
-                    aria-hidden="true"
-                    data-icon="right"
-                    fill="currentColor"
-                    focusable="false"
-                    height="1em"
-                    viewBox="64 64 896 896"
-                    width="1em"
-                  >
-                    <path
-                      d="M765.7 486.8L314.9 134.7A7.97 7.97 0 00302 141v77.3c0 4.9 2.3 9.6 6.1 12.6l360 281.1-360 281.1c-3.9 3-6.1 7.7-6.1 12.6V883c0 6.7 7.7 10.4 12.9 6.3l450.8-352.1a31.96 31.96 0 000-50.4z"
-                    />
-                  </svg>
-                </span>
-              </div>
-              <span
-                class="ant-collapse-header-text"
-              >
-                <span
-                  class="_collapseSpan_1a0a67"
-                >
-                  Beer styles
-                  <span
-                    aria-describedby="test-id"
-                    aria-hidden="true"
-                    aria-label="question-circle"
-                    class="anticon anticon-question-circle"
-                    role="img"
-                  >
-                    <svg
-                      aria-hidden="true"
-                      data-icon="question-circle"
-                      fill="currentColor"
-                      focusable="false"
-                      height="1em"
-                      viewBox="64 64 896 896"
-                      width="1em"
-                    >
-                      <path
-                        d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
-                      />
-                      <path
-                        d="M623.6 316.7C593.6 290.4 554 276 512 276s-81.6 14.5-111.6 40.7C369.2 344 352 380.7 352 420v7.6c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-44.1 43.1-80 96-80s96 35.9 96 80c0 31.1-22 59.6-56.1 72.7-21.2 8.1-39.2 22.3-52.1 40.9-13.1 19-19.9 41.8-19.9 64.9V620c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-22.7a48.3 48.3 0 0130.9-44.8c59-22.7 97.1-74.7 97.1-132.5.1-39.3-17.1-76-48.3-103.3zM472 732a40 40 0 1080 0 40 40 0 10-80 0z"
-                      />
-                    </svg>
-                  </span>
-                </span>
-              </span>
-            </div>
-          </div>
-        </div>
-        <div
-          class="ant-collapse ant-collapse-icon-position-start _collapse_1a0a67 css-dev-only-do-not-override-mncuj7"
-        >
-          <div
-            class="ant-collapse-item"
+              ›
+            </span>
+          </summary>
+          <p
+            class="mt-xs mb-md text-xs text-ink-mute"
           >
-            <div
-              aria-disabled="false"
-              aria-expanded="false"
-              class="ant-collapse-header"
-              role="button"
-              tabindex="0"
-            >
-              <div
-                class="ant-collapse-expand-icon"
-              >
-                <span
-                  aria-hidden="true"
-                  aria-label="right"
-                  class="anticon anticon-right ant-collapse-arrow"
-                  role="img"
-                >
-                  <svg
-                    aria-hidden="true"
-                    data-icon="right"
-                    fill="currentColor"
-                    focusable="false"
-                    height="1em"
-                    viewBox="64 64 896 896"
-                    width="1em"
-                  >
-                    <path
-                      d="M765.7 486.8L314.9 134.7A7.97 7.97 0 00302 141v77.3c0 4.9 2.3 9.6 6.1 12.6l360 281.1-360 281.1c-3.9 3-6.1 7.7-6.1 12.6V883c0 6.7 7.7 10.4 12.9 6.3l450.8-352.1a31.96 31.96 0 000-50.4z"
-                    />
-                  </svg>
-                </span>
-              </div>
-              <span
-                class="ant-collapse-header-text"
-              >
-                <span
-                  class="_collapseSpan_1a0a67"
-                >
-                  IBU
-                  <span
-                    aria-describedby="test-id"
-                    aria-hidden="true"
-                    aria-label="question-circle"
-                    class="anticon anticon-question-circle"
-                    role="img"
-                  >
-                    <svg
-                      aria-hidden="true"
-                      data-icon="question-circle"
-                      fill="currentColor"
-                      focusable="false"
-                      height="1em"
-                      viewBox="64 64 896 896"
-                      width="1em"
-                    >
-                      <path
-                        d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
-                      />
-                      <path
-                        d="M623.6 316.7C593.6 290.4 554 276 512 276s-81.6 14.5-111.6 40.7C369.2 344 352 380.7 352 420v7.6c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-44.1 43.1-80 96-80s96 35.9 96 80c0 31.1-22 59.6-56.1 72.7-21.2 8.1-39.2 22.3-52.1 40.9-13.1 19-19.9 41.8-19.9 64.9V620c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-22.7a48.3 48.3 0 0130.9-44.8c59-22.7 97.1-74.7 97.1-132.5.1-39.3-17.1-76-48.3-103.3zM472 732a40 40 0 1080 0 40 40 0 10-80 0z"
-                      />
-                    </svg>
-                  </span>
-                </span>
-              </span>
-            </div>
-          </div>
-        </div>
-        <div
-          class="ant-collapse ant-collapse-icon-position-start _collapse_1a0a67 css-dev-only-do-not-override-mncuj7"
-        >
+            Filter on certain styles of beer.
+          </p>
           <div
-            class="ant-collapse-item"
+            class="flex flex-col gap-sm"
           >
-            <div
-              aria-disabled="false"
-              aria-expanded="false"
-              class="ant-collapse-header"
-              role="button"
-              tabindex="0"
+            <label
+              class="flex cursor-pointer items-center gap-sm text-base text-ink"
             >
-              <div
-                class="ant-collapse-expand-icon"
-              >
-                <span
-                  aria-hidden="true"
-                  aria-label="right"
-                  class="anticon anticon-right ant-collapse-arrow"
-                  role="img"
-                >
-                  <svg
-                    aria-hidden="true"
-                    data-icon="right"
-                    fill="currentColor"
-                    focusable="false"
-                    height="1em"
-                    viewBox="64 64 896 896"
-                    width="1em"
-                  >
-                    <path
-                      d="M765.7 486.8L314.9 134.7A7.97 7.97 0 00302 141v77.3c0 4.9 2.3 9.6 6.1 12.6l360 281.1-360 281.1c-3.9 3-6.1 7.7-6.1 12.6V883c0 6.7 7.7 10.4 12.9 6.3l450.8-352.1a31.96 31.96 0 000-50.4z"
-                    />
-                  </svg>
-                </span>
-              </div>
-              <span
-                class="ant-collapse-header-text"
-              >
-                <span
-                  class="_collapseSpan_1a0a67"
-                >
-                  ABV
-                  <span
-                    aria-describedby="test-id"
-                    aria-hidden="true"
-                    aria-label="question-circle"
-                    class="anticon anticon-question-circle"
-                    role="img"
-                  >
-                    <svg
-                      aria-hidden="true"
-                      data-icon="question-circle"
-                      fill="currentColor"
-                      focusable="false"
-                      height="1em"
-                      viewBox="64 64 896 896"
-                      width="1em"
-                    >
-                      <path
-                        d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
-                      />
-                      <path
-                        d="M623.6 316.7C593.6 290.4 554 276 512 276s-81.6 14.5-111.6 40.7C369.2 344 352 380.7 352 420v7.6c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-44.1 43.1-80 96-80s96 35.9 96 80c0 31.1-22 59.6-56.1 72.7-21.2 8.1-39.2 22.3-52.1 40.9-13.1 19-19.9 41.8-19.9 64.9V620c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-22.7a48.3 48.3 0 0130.9-44.8c59-22.7 97.1-74.7 97.1-132.5.1-39.3-17.1-76-48.3-103.3zM472 732a40 40 0 1080 0 40 40 0 10-80 0z"
-                      />
-                    </svg>
-                  </span>
-                </span>
-              </span>
-            </div>
+              <input
+                class="size-md shrink-0 cursor-pointer appearance-none rounded-none border border-rule-strong bg-transparent transition-colors checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent relative after:absolute after:top-[2px] after:left-[5px] after:hidden after:h-[8px] after:w-[4px] after:rotate-45 after:border-r-2 after:border-b-2 after:border-ground after:content-[''] checked:after:block"
+                name="styles"
+                type="checkbox"
+                value="American IPA"
+              />
+              American IPA
+            </label>
+            <label
+              class="flex cursor-pointer items-center gap-sm text-base text-ink"
+            >
+              <input
+                class="size-md shrink-0 cursor-pointer appearance-none rounded-none border border-rule-strong bg-transparent transition-colors checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent relative after:absolute after:top-[2px] after:left-[5px] after:hidden after:h-[8px] after:w-[4px] after:rotate-45 after:border-r-2 after:border-b-2 after:border-ground after:content-[''] checked:after:block"
+                name="styles"
+                type="checkbox"
+                value="American Pale Ale (APA)"
+              />
+              American Pale Ale (APA)
+            </label>
+            <label
+              class="flex cursor-pointer items-center gap-sm text-base text-ink"
+            >
+              <input
+                class="size-md shrink-0 cursor-pointer appearance-none rounded-none border border-rule-strong bg-transparent transition-colors checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent relative after:absolute after:top-[2px] after:left-[5px] after:hidden after:h-[8px] after:w-[4px] after:rotate-45 after:border-r-2 after:border-b-2 after:border-ground after:content-[''] checked:after:block"
+                name="styles"
+                type="checkbox"
+                value="American Amber / Red Ale"
+              />
+              American Amber / Red Ale
+            </label>
+            <label
+              class="flex cursor-pointer items-center gap-sm text-base text-ink"
+            >
+              <input
+                class="size-md shrink-0 cursor-pointer appearance-none rounded-none border border-rule-strong bg-transparent transition-colors checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent relative after:absolute after:top-[2px] after:left-[5px] after:hidden after:h-[8px] after:w-[4px] after:rotate-45 after:border-r-2 after:border-b-2 after:border-ground after:content-[''] checked:after:block"
+                name="styles"
+                type="checkbox"
+                value="American Blonde Ale"
+              />
+              American Blonde Ale
+            </label>
+            <label
+              class="flex cursor-pointer items-center gap-sm text-base text-ink"
+            >
+              <input
+                class="size-md shrink-0 cursor-pointer appearance-none rounded-none border border-rule-strong bg-transparent transition-colors checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent relative after:absolute after:top-[2px] after:left-[5px] after:hidden after:h-[8px] after:w-[4px] after:rotate-45 after:border-r-2 after:border-b-2 after:border-ground after:content-[''] checked:after:block"
+                name="styles"
+                type="checkbox"
+                value="American Double / Imperial IPA"
+              />
+              American Double / Imperial IPA
+            </label>
+            <label
+              class="flex cursor-pointer items-center gap-sm text-base text-ink"
+            >
+              <input
+                class="size-md shrink-0 cursor-pointer appearance-none rounded-none border border-rule-strong bg-transparent transition-colors checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent relative after:absolute after:top-[2px] after:left-[5px] after:hidden after:h-[8px] after:w-[4px] after:rotate-45 after:border-r-2 after:border-b-2 after:border-ground after:content-[''] checked:after:block"
+                name="styles"
+                type="checkbox"
+                value="American Pale Wheat Ale"
+              />
+              American Pale Wheat Ale
+            </label>
+            <label
+              class="flex cursor-pointer items-center gap-sm text-base text-ink"
+            >
+              <input
+                class="size-md shrink-0 cursor-pointer appearance-none rounded-none border border-rule-strong bg-transparent transition-colors checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent relative after:absolute after:top-[2px] after:left-[5px] after:hidden after:h-[8px] after:w-[4px] after:rotate-45 after:border-r-2 after:border-b-2 after:border-ground after:content-[''] checked:after:block"
+                name="styles"
+                type="checkbox"
+                value="American Brown Ale"
+              />
+              American Brown Ale
+            </label>
+            <label
+              class="flex cursor-pointer items-center gap-sm text-base text-ink"
+            >
+              <input
+                class="size-md shrink-0 cursor-pointer appearance-none rounded-none border border-rule-strong bg-transparent transition-colors checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent relative after:absolute after:top-[2px] after:left-[5px] after:hidden after:h-[8px] after:w-[4px] after:rotate-45 after:border-r-2 after:border-b-2 after:border-ground after:content-[''] checked:after:block"
+                name="styles"
+                type="checkbox"
+                value="American Porter"
+              />
+              American Porter
+            </label>
+            <label
+              class="flex cursor-pointer items-center gap-sm text-base text-ink"
+            >
+              <input
+                class="size-md shrink-0 cursor-pointer appearance-none rounded-none border border-rule-strong bg-transparent transition-colors checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent relative after:absolute after:top-[2px] after:left-[5px] after:hidden after:h-[8px] after:w-[4px] after:rotate-45 after:border-r-2 after:border-b-2 after:border-ground after:content-[''] checked:after:block"
+                name="styles"
+                type="checkbox"
+                value="Saison / Farmhouse Ale"
+              />
+              Saison / Farmhouse Ale
+            </label>
+            <label
+              class="flex cursor-pointer items-center gap-sm text-base text-ink"
+            >
+              <input
+                class="size-md shrink-0 cursor-pointer appearance-none rounded-none border border-rule-strong bg-transparent transition-colors checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent relative after:absolute after:top-[2px] after:left-[5px] after:hidden after:h-[8px] after:w-[4px] after:rotate-45 after:border-r-2 after:border-b-2 after:border-ground after:content-[''] checked:after:block"
+                name="styles"
+                type="checkbox"
+                value="Witbier"
+              />
+              Witbier
+            </label>
+            <label
+              class="flex cursor-pointer items-center gap-sm text-base text-ink"
+            >
+              <input
+                class="size-md shrink-0 cursor-pointer appearance-none rounded-none border border-rule-strong bg-transparent transition-colors checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent relative after:absolute after:top-[2px] after:left-[5px] after:hidden after:h-[8px] after:w-[4px] after:rotate-45 after:border-r-2 after:border-b-2 after:border-ground after:content-[''] checked:after:block"
+                name="styles"
+                type="checkbox"
+                value="Fruit / Vegetable Beer"
+              />
+              Fruit / Vegetable Beer
+            </label>
+            <label
+              class="flex cursor-pointer items-center gap-sm text-base text-ink"
+            >
+              <input
+                class="size-md shrink-0 cursor-pointer appearance-none rounded-none border border-rule-strong bg-transparent transition-colors checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent relative after:absolute after:top-[2px] after:left-[5px] after:hidden after:h-[8px] after:w-[4px] after:rotate-45 after:border-r-2 after:border-b-2 after:border-ground after:content-[''] checked:after:block"
+                name="styles"
+                type="checkbox"
+                value="Kölsch"
+              />
+              Kölsch
+            </label>
+            <label
+              class="flex cursor-pointer items-center gap-sm text-base text-ink"
+            >
+              <input
+                class="size-md shrink-0 cursor-pointer appearance-none rounded-none border border-rule-strong bg-transparent transition-colors checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent relative after:absolute after:top-[2px] after:left-[5px] after:hidden after:h-[8px] after:w-[4px] after:rotate-45 after:border-r-2 after:border-b-2 after:border-ground after:content-[''] checked:after:block"
+                name="styles"
+                type="checkbox"
+                value="Hefeweizen"
+              />
+              Hefeweizen
+            </label>
+            <label
+              class="flex cursor-pointer items-center gap-sm text-base text-ink"
+            >
+              <input
+                class="size-md shrink-0 cursor-pointer appearance-none rounded-none border border-rule-strong bg-transparent transition-colors checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent relative after:absolute after:top-[2px] after:left-[5px] after:hidden after:h-[8px] after:w-[4px] after:rotate-45 after:border-r-2 after:border-b-2 after:border-ground after:content-[''] checked:after:block"
+                name="styles"
+                type="checkbox"
+                value="American Pale Lager"
+              />
+              American Pale Lager
+            </label>
+            <label
+              class="flex cursor-pointer items-center gap-sm text-base text-ink"
+            >
+              <input
+                class="size-md shrink-0 cursor-pointer appearance-none rounded-none border border-rule-strong bg-transparent transition-colors checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent relative after:absolute after:top-[2px] after:left-[5px] after:hidden after:h-[8px] after:w-[4px] after:rotate-45 after:border-r-2 after:border-b-2 after:border-ground after:content-[''] checked:after:block"
+                name="styles"
+                type="checkbox"
+                value="American Stout"
+              />
+              American Stout
+            </label>
+            <label
+              class="flex cursor-pointer items-center gap-sm text-base text-ink"
+            >
+              <input
+                class="size-md shrink-0 cursor-pointer appearance-none rounded-none border border-rule-strong bg-transparent transition-colors checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent relative after:absolute after:top-[2px] after:left-[5px] after:hidden after:h-[8px] after:w-[4px] after:rotate-45 after:border-r-2 after:border-b-2 after:border-ground after:content-[''] checked:after:block"
+                name="styles"
+                type="checkbox"
+                value="Other"
+              />
+              Other
+            </label>
           </div>
-        </div>
-        <button
-          class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-primary ant-btn-color-primary ant-btn-variant-solid _buttons_1a0a67"
-          type="button"
+        </details>
+        <details
+          class="group border-b border-rule py-md"
+          open=""
         >
-          <span>
-            Apply Filters
-          </span>
-        </button>
-        <button
-          class="ant-btn css-dev-only-do-not-override-mncuj7 ant-btn-default ant-btn-color-default ant-btn-variant-outlined _buttons_1a0a67"
-          type="button"
-        >
-          <span
-            class="ant-btn-icon"
+          <summary
+            class="flex cursor-pointer list-none items-center justify-between gap-sm text-base text-ink marker:content-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            IBU
+            <span
+              aria-hidden="true"
+              class="text-ink-mute transition-transform group-open:rotate-90"
+            >
+              ›
+            </span>
+          </summary>
+          <p
+            class="mt-xs mb-md text-xs text-ink-mute"
+          >
+            Filter on the bitterness of the beer.
+          </p>
+          <div
+            class="flex flex-col gap-sm"
           >
             <span
-              aria-label="rollback"
-              class="anticon anticon-rollback"
-              role="img"
+              aria-disabled="false"
+              aria-label="IBU range"
+              class="relative flex w-full touch-none items-center select-none data-[disabled]:opacity-50"
+              data-orientation="horizontal"
+              data-slot="slider"
+              dir="ltr"
+              style="--radix-slider-thumb-transform: translateX(-50%);"
             >
-              <svg
-                aria-hidden="true"
-                data-icon="rollback"
-                fill="currentColor"
-                focusable="false"
-                height="1em"
-                viewBox="64 64 896 896"
-                width="1em"
+              <span
+                class="relative h-px w-full grow bg-rule-strong"
+                data-orientation="horizontal"
+                data-slot="slider-track"
               >
-                <path
-                  d="M793 242H366v-74c0-6.7-7.7-10.4-12.9-6.3l-142 112a8 8 0 000 12.6l142 112c5.2 4.1 12.9.4 12.9-6.3v-74h415v470H175c-4.4 0-8 3.6-8 8v60c0 4.4 3.6 8 8 8h618c35.3 0 64-28.7 64-64V306c0-35.3-28.7-64-64-64z"
+                <span
+                  class="absolute h-px bg-accent"
+                  data-orientation="horizontal"
+                  data-slot="slider-range"
+                  style="left: 0%; right: 0%;"
                 />
-              </svg>
+              </span>
+              <span
+                style="transform: var(--radix-slider-thumb-transform); position: absolute; left: calc(0% + 0px);"
+              >
+                <span
+                  aria-label="Minimum"
+                  aria-orientation="horizontal"
+                  aria-valuemax="138"
+                  aria-valuemin="0"
+                  aria-valuenow="0"
+                  class="block size-sm shrink-0 cursor-grab bg-accent transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:cursor-grabbing disabled:pointer-events-none"
+                  data-orientation="horizontal"
+                  data-radix-collection-item=""
+                  data-slot="slider-thumb"
+                  role="slider"
+                  style=""
+                  tabindex="0"
+                />
+              </span>
+              <span
+                style="transform: var(--radix-slider-thumb-transform); position: absolute; left: calc(100% + 0px);"
+              >
+                <span
+                  aria-label="Maximum"
+                  aria-orientation="horizontal"
+                  aria-valuemax="138"
+                  aria-valuemin="0"
+                  aria-valuenow="138"
+                  class="block size-sm shrink-0 cursor-grab bg-accent transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:cursor-grabbing disabled:pointer-events-none"
+                  data-orientation="horizontal"
+                  data-radix-collection-item=""
+                  data-slot="slider-thumb"
+                  role="slider"
+                  style=""
+                  tabindex="0"
+                />
+              </span>
             </span>
-          </span>
-          <span>
-            Reset Filters
-          </span>
-        </button>
+            <p
+              class="tnum m-0 text-xs text-ink-mute"
+            >
+              0
+               – 
+              138
+            </p>
+          </div>
+        </details>
+        <details
+          class="group border-b border-rule py-md"
+          open=""
+        >
+          <summary
+            class="flex cursor-pointer list-none items-center justify-between gap-sm text-base text-ink marker:content-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            ABV
+            <span
+              aria-hidden="true"
+              class="text-ink-mute transition-transform group-open:rotate-90"
+            >
+              ›
+            </span>
+          </summary>
+          <p
+            class="mt-xs mb-md text-xs text-ink-mute"
+          >
+            Filter on the alcohol percentage of the beer.
+          </p>
+          <div
+            class="flex flex-col gap-sm"
+          >
+            <span
+              aria-disabled="false"
+              aria-label="ABV range"
+              class="relative flex w-full touch-none items-center select-none data-[disabled]:opacity-50"
+              data-orientation="horizontal"
+              data-slot="slider"
+              dir="ltr"
+              style="--radix-slider-thumb-transform: translateX(-50%);"
+            >
+              <span
+                class="relative h-px w-full grow bg-rule-strong"
+                data-orientation="horizontal"
+                data-slot="slider-track"
+              >
+                <span
+                  class="absolute h-px bg-accent"
+                  data-orientation="horizontal"
+                  data-slot="slider-range"
+                  style="left: 0%; right: 0%;"
+                />
+              </span>
+              <span
+                style="transform: var(--radix-slider-thumb-transform); position: absolute; left: calc(0% + 0px);"
+              >
+                <span
+                  aria-label="Minimum"
+                  aria-orientation="horizontal"
+                  aria-valuemax="13"
+                  aria-valuemin="0"
+                  aria-valuenow="0"
+                  class="block size-sm shrink-0 cursor-grab bg-accent transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:cursor-grabbing disabled:pointer-events-none"
+                  data-orientation="horizontal"
+                  data-radix-collection-item=""
+                  data-slot="slider-thumb"
+                  role="slider"
+                  style=""
+                  tabindex="0"
+                />
+              </span>
+              <span
+                style="transform: var(--radix-slider-thumb-transform); position: absolute; left: calc(100% + 0px);"
+              >
+                <span
+                  aria-label="Maximum"
+                  aria-orientation="horizontal"
+                  aria-valuemax="13"
+                  aria-valuemin="0"
+                  aria-valuenow="13"
+                  class="block size-sm shrink-0 cursor-grab bg-accent transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:cursor-grabbing disabled:pointer-events-none"
+                  data-orientation="horizontal"
+                  data-radix-collection-item=""
+                  data-slot="slider-thumb"
+                  role="slider"
+                  style=""
+                  tabindex="0"
+                />
+              </span>
+            </span>
+            <p
+              class="tnum m-0 text-xs text-ink-mute"
+            >
+              0
+              %
+               – 
+              13
+              %
+            </p>
+          </div>
+        </details>
+        <div
+          class="flex flex-wrap gap-sm"
+        >
+          <button
+            class="inline-flex shrink-0 cursor-pointer items-center justify-center gap-sm rounded-none font-sans whitespace-nowrap transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-accent text-ground hover:bg-ink h-xl px-md text-base"
+            data-slot="button"
+          >
+            Apply Filters
+          </button>
+          <button
+            class="inline-flex shrink-0 cursor-pointer items-center justify-center gap-sm rounded-none font-sans whitespace-nowrap transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 text-ink-mute hover:text-ink h-xl px-md text-base"
+            data-slot="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-rotate-ccw size-md"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
+              />
+              <path
+                d="M3 3v5h5"
+              />
+            </svg>
+            Reset
+          </button>
+        </div>
       </section>
       <p>
         Test

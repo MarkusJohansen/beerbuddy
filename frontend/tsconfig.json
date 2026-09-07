@@ -17,7 +17,11 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    // shadcn/ui's vendored source imports itself as "@/components/ui/...".
+    // Mirrored in vite.config.ts, which is what actually resolves it.
+    "paths": { "@/*": ["./src/*"] }
   },
   // ../backend/src is included for types only. src/api/client.ts imports the
   // backend's AppType so request and response shapes are checked at build time
